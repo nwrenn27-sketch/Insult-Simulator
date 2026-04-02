@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pond Hockey Insult Simulator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <!-- Health Bars -->
+        <div class="health-bars">
+            <div class="health-bar-container left">
+                <div class="health-bar-border">
+                    <div class="health-bar" id="player1-health"></div>
+                </div>
+                <div class="player-name" id="player1-name">Player 1</div>
+            </div>
+
+            <div class="round-counter">Round <span id="round-number">1</span></div>
+
+            <div class="health-bar-container right">
+                <div class="health-bar-border">
+                    <div class="health-bar" id="player2-health"></div>
+                </div>
+                <div class="player-name" id="player2-name">Player 2</div>
+            </div>
+        </div>
+
+        <!-- Main Game Area -->
+        <div class="game-area">
+            <!-- Character Display -->
+            <div class="characters">
+                <div class="character left" id="character1">
+                    <div class="character-sprite">
+                        <div class="hockey-player player1-sprite"></div>
+                    </div>
+                    <div class="character-status" id="player1-status"></div>
+                </div>
+
+                <div class="center-display">
+                    <!-- Insult Display -->
+                    <div class="insult-bubble">
+                        <div class="current-insult" id="current-insult">
+                            Select words to build your insult!
+                        </div>
+                    </div>
+
+                    <!-- Damage Indicator -->
+                    <div class="damage-indicator" id="damage-indicator"></div>
+                </div>
+
+                <div class="character right" id="character2">
+                    <div class="character-sprite">
+                        <div class="hockey-player player2-sprite"></div>
+                    </div>
+                    <div class="character-status" id="player2-status"></div>
+                </div>
+            </div>
+
+            <!-- Word Selection Area -->
+            <div class="word-selection-area">
+                <div class="available-words" id="available-words">
+                    <!-- Words will be dynamically added here -->
+                </div>
+
+                <div class="action-buttons">
+                    <button class="game-button" id="finish-insult-btn">Finish Insult</button>
+                    <button class="game-button secondary" id="reset-btn">Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Turn Indicator -->
+        <div class="turn-indicator" id="turn-indicator">
+            <span id="current-turn">Player 1</span>'s Turn
+        </div>
+    </div>
+
+    <script src="words.js"></script>
+    <script src="characters.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
