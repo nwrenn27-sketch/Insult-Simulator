@@ -7,7 +7,45 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="game-container">
+    <div id="character-select">
+        <h1 class="cs-title">CHOOSE YOUR FIGHTERS</h1>
+        <div class="cs-arena">
+            <div class="cs-picker" id="cs-p1">
+                <div class="cs-player-label">PLAYER 1</div>
+                <div class="cs-controls-hint">Keys: A / D</div>
+                <div class="cs-carousel">
+                    <button class="cs-arrow" id="p1-prev">&#9664;</button>
+                    <div class="cs-character-display">
+                        <div class="cs-sprite-wrap" id="p1-sprite"></div>
+                        <div class="cs-char-name" id="p1-char-name"></div>
+                        <div class="cs-char-tagline" id="p1-char-tagline"></div>
+                    </div>
+                    <button class="cs-arrow" id="p1-next">&#9654;</button>
+                </div>
+                <div class="cs-dots" id="p1-dots"></div>
+            </div>
+
+            <div class="cs-vs">VS</div>
+
+            <div class="cs-picker" id="cs-p2">
+                <div class="cs-player-label">PLAYER 2</div>
+                <div class="cs-controls-hint">Keys: &#9664; / &#9654;</div>
+                <div class="cs-carousel">
+                    <button class="cs-arrow" id="p2-prev">&#9664;</button>
+                    <div class="cs-character-display">
+                        <div class="cs-sprite-wrap" id="p2-sprite"></div>
+                        <div class="cs-char-name" id="p2-char-name"></div>
+                        <div class="cs-char-tagline" id="p2-char-tagline"></div>
+                    </div>
+                    <button class="cs-arrow" id="p2-next">&#9654;</button>
+                </div>
+                <div class="cs-dots" id="p2-dots"></div>
+            </div>
+        </div>
+        <button class="game-button cs-start-btn" id="cs-start">START GAME</button>
+    </div>
+
+    <div class="game-container" id="game-screen" style="display:none">
         <!-- Health Bars -->
         <div class="health-bars">
             <div class="health-bar-container left">

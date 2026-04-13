@@ -1,5 +1,9 @@
 // Pond Hockey Insult Simulator - Game Logic
 
+// Player names — set by character select before resetGame() is called
+let p1CharName = 'Player 1';
+let p2CharName = 'Player 2';
+
 // Game constants
 const AMOUNT = 13; // Board + Tea * 2
 const MIN_NOUNS = 3;
@@ -433,14 +437,16 @@ function resetGame() {
         currentPlayer: 1,
         round: 1,
         players: {
-            1: { health: 100, name: 'Player 1' },
-            2: { health: 100, name: 'Player 2' }
+            1: { health: 100, name: p1CharName },
+            2: { health: 100, name: p2CharName }
         },
         availableWords: generateWordPool(),
         selectedWords: [],
         completedInsult: []
     };
 
+    document.getElementById('player1-name').textContent = p1CharName;
+    document.getElementById('player2-name').textContent = p2CharName;
     updateHealthBar(1);
     updateHealthBar(2);
     updateTurnIndicator();
