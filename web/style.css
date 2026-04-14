@@ -617,6 +617,203 @@ body {
     letter-spacing: 5px;
 }
 
+/* =========================================================
+   Penalty Box Scene
+   ========================================================= */
+
+.characters {
+    background: linear-gradient(180deg, #060e18 0%, #0a1a2e 60%, #122540 100%);
+    padding: 16px 24px;
+    gap: 12px;
+    align-items: stretch;
+}
+
+/* Arena atmosphere — faint crowd rows in background */
+.characters::before {
+    background:
+        repeating-linear-gradient(0deg,
+            transparent 0px, transparent 18px,
+            rgba(255,255,255,0.015) 18px, rgba(255,255,255,0.015) 19px),
+        repeating-linear-gradient(90deg,
+            transparent 0px, transparent 38px,
+            rgba(255,255,255,0.01) 38px, rgba(255,255,255,0.01) 39px);
+    height: 100%;
+    border-top: none;
+}
+
+.character {
+    gap: 8px;
+}
+
+/* ---- Penalty box container ---- */
+.pbox {
+    display: flex;
+    flex-direction: column;
+    background: #0d1520;
+    border: 8px solid #6a7e90;
+    border-radius: 6px;
+    box-shadow:
+        0 0 0 2px #2a3a4a,
+        0 16px 48px rgba(0,0,0,0.85),
+        inset 0 0 30px rgba(0,0,0,0.5);
+    overflow: hidden;
+    flex: 1;
+}
+
+/* ---- Horizontal metal pipe ---- */
+.pbox-pipe-h {
+    height: 14px;
+    flex-shrink: 0;
+    background: linear-gradient(180deg,
+        #d8e4ee 0%,
+        #9aafc0 28%,
+        #4a6070 58%,
+        #8aa0b4 100%);
+    border-top: 1px solid #eaf2fa;
+    border-bottom: 1px solid #1a2a38;
+}
+
+/* ---- Glass area ---- */
+.pbox-glass-area {
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    background: linear-gradient(180deg,
+        rgba(130, 195, 255, 0.10) 0%,
+        rgba(150, 210, 255, 0.04) 100%);
+    overflow: hidden;
+    min-height: 280px;
+}
+
+/* Glass tint overlay */
+.pbox-glass-area::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg,
+        rgba(200, 235, 255, 0.09) 0%,
+        rgba(180, 220, 255, 0.03) 100%);
+    pointer-events: none;
+    z-index: 10;
+}
+
+/* Glare streak */
+.pbox-glare {
+    position: absolute;
+    top: 8px;
+    left: 10px;
+    width: 26%;
+    height: 52%;
+    background: linear-gradient(140deg,
+        rgba(255, 255, 255, 0.20) 0%,
+        rgba(255, 255, 255, 0.05) 50%,
+        transparent 100%);
+    border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+    pointer-events: none;
+    z-index: 11;
+}
+
+/* Breath fog at inner glass edge */
+.pbox-fog {
+    position: absolute;
+    bottom: 115px;
+    width: 75px;
+    height: 48px;
+    background: radial-gradient(ellipse,
+        rgba(255, 255, 255, 0.16) 0%,
+        rgba(255, 255, 255, 0.05) 55%,
+        transparent 70%);
+    pointer-events: none;
+    z-index: 12;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+#character1 .pbox-fog { right: -4px; }
+#character2 .pbox-fog { left:  -4px; }
+.pbox-fog.active       { opacity: 1; }
+
+/* ---- Character sprite inside box ---- */
+.character-sprite {
+    width: 220px;
+    height: 280px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    position: relative;
+    z-index: 5;
+}
+
+/* ---- Boards (bottom of box) ---- */
+.pbox-boards {
+    flex-shrink: 0;
+    background: linear-gradient(180deg, #f2f2f2 0%, #e0e0e0 100%);
+    border-top: 8px solid #CC1010;
+    border-bottom: 4px solid #CC1010;
+    padding: 10px 20px;
+    text-align: center;
+    position: relative;
+}
+.pbox-boards::after {
+    content: '';
+    position: absolute;
+    bottom: 7px;
+    left: 0; right: 0;
+    height: 3px;
+    background: #CC1010;
+}
+.pbox-label {
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 4px;
+    color: #444;
+    text-transform: uppercase;
+    font-family: 'Courier New', monospace;
+}
+
+/* ---- Characters lean toward center (yelling through glass) ---- */
+#character1 .hockey-player {
+    transform: translateX(16px) rotate(5deg);
+    transform-origin: bottom center;
+    transition: transform 0.3s ease;
+    filter: drop-shadow(0 10px 22px rgba(0,0,0,0.6));
+}
+#character2 .hockey-player {
+    transform: translateX(-16px) rotate(-5deg);
+    transform-origin: bottom center;
+    transition: transform 0.3s ease;
+    filter: drop-shadow(0 10px 22px rgba(0,0,0,0.6));
+}
+
+/* ---- Attack: lunge into glass ---- */
+#character1.attacking .hockey-player { animation: p1Attack 0.5s ease; }
+#character2.attacking .hockey-player { animation: p2Attack 0.5s ease; }
+@keyframes p1Attack {
+    0%   { transform: translateX(16px)  rotate(5deg); }
+    40%  { transform: translateX(40px)  rotate(11deg) scale(1.08); }
+    100% { transform: translateX(16px)  rotate(5deg); }
+}
+@keyframes p2Attack {
+    0%   { transform: translateX(-16px) rotate(-5deg); }
+    40%  { transform: translateX(-40px) rotate(-11deg) scale(1.08); }
+    100% { transform: translateX(-16px) rotate(-5deg); }
+}
+
+/* ---- Hurt: reel back ---- */
+#character1.damaged .hockey-player { animation: p1Hurt 0.45s ease; }
+#character2.damaged .hockey-player { animation: p2Hurt 0.45s ease; }
+@keyframes p1Hurt {
+    0%, 100% { transform: translateX(16px)  rotate(5deg); }
+    30%      { transform: translateX(-6px)  rotate(0deg); }
+    65%      { transform: translateX(24px)  rotate(7deg); }
+}
+@keyframes p2Hurt {
+    0%, 100% { transform: translateX(-16px) rotate(-5deg); }
+    30%      { transform: translateX(6px)   rotate(0deg); }
+    65%      { transform: translateX(-24px) rotate(-7deg); }
+}
+
 /* Responsive Design */
 @media (max-width: 1200px) {
     .character-sprite {
