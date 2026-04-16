@@ -1,8 +1,15 @@
-// characters.js - Character data and selection screen
+// ============================================================
+// characters.js — SVG builder, character roster, select screen
+// ============================================================
 
-// ---------------------------------------------------------------------------
-// SVG body section renderers
-// ---------------------------------------------------------------------------
+// ---- Utility -----------------------------------------------
+
+function resolveOpt(opt, p, s, e) {
+    if (opt == null) return null;
+    return typeof opt === 'function' ? opt(p, s, e) : opt;
+}
+
+// ---- SVG section builders ----------------------------------
 
 const SEC_BASE = `
   <ellipse cx="100" cy="277" rx="56" ry="8" fill="rgba(0,0,0,0.25)"/>
@@ -82,37 +89,34 @@ const SEC_MOUTH_YELL = `
   <line x1="100" y1="112" x2="100" y2="121" stroke="#ccc" stroke-width="1.5"/>
   <line x1="110" y1="112" x2="111" y2="119" stroke="#ccc" stroke-width="1.5"/>`;
 
-function resolveOpt(opt, p, s, e) {
-    if (opt === undefined || opt === null) return null;
-    return typeof opt === 'function' ? opt(p, s, e) : opt;
-}
-
-// ---------------------------------------------------------------------------
-// Per-character visual opts
-// ---------------------------------------------------------------------------
+// ---- Per-character visual overrides ------------------------
 
 const OPTS_ROOKIE = {
+    scaleX: 0.78,
     extras: `
   <path d="M 63 80 Q 100 87 137 80 L 135 93 Q 100 99 65 93 Z" fill="rgba(80,170,255,0.65)" stroke="rgba(120,200,255,0.9)" stroke-width="1.5"/>
   <circle cx="80" cy="104" r="1.5" fill="#CC8855" opacity="0.45"/>
-  <circle cx="86" cy="106" r="1" fill="#CC8855" opacity="0.35"/>
+  <circle cx="86" cy="106" r="1"   fill="#CC8855" opacity="0.35"/>
   <circle cx="114" cy="104" r="1.5" fill="#CC8855" opacity="0.45"/>
-  <circle cx="120" cy="106" r="1" fill="#CC8855" opacity="0.35"/>`
+  <circle cx="120" cy="106" r="1"   fill="#CC8855" opacity="0.35"/>`,
 };
 
 const OPTS_VETERAN = {
+    scaleX: 1.0,
     extras: `
   <path d="M 83 111 Q 100 105 117 111 Q 115 121 107 119 Q 100 118 93 119 Q 85 121 83 111 Z" fill="#e8e8e8" stroke="#bbb" stroke-width="1"/>
-  <ellipse cx="100" cy="120" rx="20" ry="6" fill="#9a9a9a" opacity="0.12"/>`
+  <ellipse cx="100" cy="120" rx="20" ry="6" fill="#9a9a9a" opacity="0.12"/>`,
 };
 
 const OPTS_COACHES_SON = {
+    scaleX: 1.18,
     mouth: `
   <path d="M 88 115 Q 100 122 112 114" fill="none" stroke="black" stroke-width="3" stroke-linecap="round"/>
-  <path d="M 100 115 Q 109 119 113 114" fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>`
+  <path d="M 100 115 Q 109 119 113 114" fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>`,
 };
 
 const OPTS_FIGURE_SKATER = {
+    scaleX: 0.60,
     helmet: `
   <path d="M 62 82 Q 60 28 100 21 Q 140 28 138 82 Q 118 70 100 68 Q 82 70 62 82 Z" fill="#7B3F00"/>
   <path d="M 72 26 Q 100 18 128 26" stroke="#9B5F20" stroke-width="5" fill="none" opacity="0.55" stroke-linecap="round"/>
@@ -121,10 +125,11 @@ const OPTS_FIGURE_SKATER = {
   <path d="M 138 82 Q 154 92 158 68 Q 156 46 140 54 Q 142 68 138 82 Z" fill="#7B3F00"/>`,
     mouth: `
   <path d="M 89 114 Q 100 121 111 114" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round"/>
-  <path d="M 94 112 Q 100 115 106 112" fill="#E8906A" stroke="none" opacity="0.6"/>`
+  <path d="M 94 112 Q 100 115 106 112" fill="#E8906A" stroke="none" opacity="0.6"/>`,
 };
 
 const OPTS_BEER_LEAGUER = {
+    scaleX: 1.52,
     extras: `
   <circle cx="82" cy="112" r="1.2" fill="#7B6448" opacity="0.55"/>
   <circle cx="87" cy="114" r="1.2" fill="#7B6448" opacity="0.5"/>
@@ -134,17 +139,18 @@ const OPTS_BEER_LEAGUER = {
   <circle cx="107" cy="116" r="1.2" fill="#7B6448" opacity="0.5"/>
   <circle cx="112" cy="114" r="1.2" fill="#7B6448" opacity="0.55"/>
   <circle cx="117" cy="112" r="1.2" fill="#7B6448" opacity="0.5"/>
-  <circle cx="84" cy="118" r="1" fill="#7B6448" opacity="0.4"/>
-  <circle cx="90" cy="120" r="1" fill="#7B6448" opacity="0.4"/>
-  <circle cx="96" cy="121" r="1" fill="#7B6448" opacity="0.4"/>
-  <circle cx="101" cy="121" r="1" fill="#7B6448" opacity="0.4"/>
-  <circle cx="107" cy="121" r="1" fill="#7B6448" opacity="0.4"/>
-  <circle cx="113" cy="120" r="1" fill="#7B6448" opacity="0.4"/>
-  <circle cx="118" cy="118" r="1" fill="#7B6448" opacity="0.4"/>
-  <ellipse cx="100" cy="187" rx="36" ry="11" fill="white" opacity="0.16"/>`
+  <circle cx="84"  cy="118" r="1"   fill="#7B6448" opacity="0.4"/>
+  <circle cx="90"  cy="120" r="1"   fill="#7B6448" opacity="0.4"/>
+  <circle cx="96"  cy="121" r="1"   fill="#7B6448" opacity="0.4"/>
+  <circle cx="101" cy="121" r="1"   fill="#7B6448" opacity="0.4"/>
+  <circle cx="107" cy="121" r="1"   fill="#7B6448" opacity="0.4"/>
+  <circle cx="113" cy="120" r="1"   fill="#7B6448" opacity="0.4"/>
+  <circle cx="118" cy="118" r="1"   fill="#7B6448" opacity="0.4"/>
+  <ellipse cx="100" cy="187" rx="36" ry="11" fill="white" opacity="0.16"/>`,
 };
 
 const OPTS_GOALIE = {
+    scaleX: 1.35,
     helmet: (p, s) => `
   <path d="M 62 80 Q 61 26 100 23 Q 139 26 138 80 Z" fill="${p}" stroke="black" stroke-width="2.5"/>
   <path d="M 68 38 Q 100 30 132 38 L 128 54 Q 100 48 72 54 Z" fill="${s}" opacity="0.65"/>
@@ -157,28 +163,30 @@ const OPTS_GOALIE = {
   <ellipse cx="117" cy="88" rx="13" ry="10" fill="rgba(0,0,0,0.85)"/>
   <ellipse cx="83" cy="88" rx="9" ry="6" fill="${e}" opacity="0.45"/>
   <ellipse cx="117" cy="88" rx="9" ry="6" fill="${e}" opacity="0.45"/>
-  <line x1="65" y1="98" x2="135" y2="98" stroke="black" stroke-width="2.5" opacity="0.45"/>
+  <line x1="65" y1="98"  x2="135" y2="98"  stroke="black" stroke-width="2.5" opacity="0.45"/>
   <line x1="65" y1="110" x2="135" y2="110" stroke="black" stroke-width="2.5" opacity="0.45"/>
-  <line x1="80" y1="80" x2="81" y2="122" stroke="black" stroke-width="2" opacity="0.45"/>
-  <line x1="100" y1="78" x2="100" y2="124" stroke="black" stroke-width="2" opacity="0.45"/>
-  <line x1="120" y1="80" x2="119" y2="122" stroke="black" stroke-width="2" opacity="0.45"/>
-  <path d="M 66 112 Q 100 122 134 112 Q 130 127 100 131 Q 70 127 66 112 Z" fill="${s}" stroke="black" stroke-width="1.5"/>`
+  <line x1="80" y1="80"  x2="81"  y2="122" stroke="black" stroke-width="2"   opacity="0.45"/>
+  <line x1="100" y1="78" x2="100" y2="124" stroke="black" stroke-width="2"   opacity="0.45"/>
+  <line x1="120" y1="80" x2="119" y2="122" stroke="black" stroke-width="2"   opacity="0.45"/>
+  <path d="M 66 112 Q 100 122 134 112 Q 130 127 100 131 Q 70 127 66 112 Z" fill="${s}" stroke="black" stroke-width="1.5"/>`,
 };
 
 const OPTS_EUROPEAN_IMPORT = {
+    scaleX: 0.78,
     extras: `
   <path d="M 62 82 Q 46 94 42 70 Q 44 48 60 55 Q 58 70 62 82 Z" fill="#2C1A0A"/>
   <path d="M 138 82 Q 154 94 158 70 Q 156 48 140 55 Q 142 70 138 82 Z" fill="#2C1A0A"/>
   <path d="M 52 94 Q 48 104 50 110" stroke="#2C1A0A" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-  <path d="M 148 94 Q 152 104 150 110" stroke="#2C1A0A" stroke-width="3.5" fill="none" stroke-linecap="round"/>`
+  <path d="M 148 94 Q 152 104 150 110" stroke="#2C1A0A" stroke-width="3.5" fill="none" stroke-linecap="round"/>`,
 };
 
 const OPTS_REF = {
+    scaleX: 1.0,
     helmet: `
   <path d="M 62 82 Q 60 28 100 21 Q 140 28 138 82 Q 118 72 100 70 Q 82 72 62 82 Z" fill="#888"/>
   <path d="M 70 28 Q 100 21 130 28" stroke="#bbb" stroke-width="5" fill="none" opacity="0.7" stroke-linecap="round"/>
   <path d="M 66 52 Q 100 47 134 52" stroke="#aaa" stroke-width="2.5" fill="none" opacity="0.5"/>
-  <ellipse cx="60" cy="80" rx="11" ry="16" fill="#777" stroke="#555" stroke-width="1.5"/>
+  <ellipse cx="60"  cy="80" rx="11" ry="16" fill="#777" stroke="#555" stroke-width="1.5"/>
   <ellipse cx="140" cy="80" rx="11" ry="16" fill="#777" stroke="#555" stroke-width="1.5"/>`,
     rightArm: (p, s) => `
   <path d="M 160 128 Q 178 102 182 74" stroke="${p}" stroke-width="28" fill="none" stroke-linecap="round"/>
@@ -193,194 +201,167 @@ const OPTS_REF = {
   <path d="M 42 163 Q 100 159 158 163 L 157 172 Q 100 168 43 172 Z" fill="black" opacity="0.82"/>
   <path d="M 44 180 Q 100 176 156 180 L 155 189 Q 100 185 45 189 Z" fill="black" opacity="0.82"/>
   <path d="M 89 116 Q 100 120 111 116" stroke="#ccc" stroke-width="1.5" fill="none"/>
-  <rect x="96" y="119" width="8" height="5" rx="1.5" fill="#DAA520" stroke="#777" stroke-width="1"/>`
+  <rect x="96" y="119" width="8" height="5" rx="1.5" fill="#DAA520" stroke="#777" stroke-width="1"/>`,
 };
 
-// ---------------------------------------------------------------------------
-// Main SVG builder
-// ---------------------------------------------------------------------------
+// ---- SVG builder -------------------------------------------
 
 function makeCharacterSVG(primary, secondary, eyeColor, number, mirrored = false, opts = {}) {
-    const helmetSec   = resolveOpt(opts.helmet,   primary, secondary, eyeColor) ?? secHelmet(primary, secondary);
-    const mouthSec    = resolveOpt(opts.mouth,    primary, secondary, eyeColor) ?? SEC_MOUTH_YELL;
-    const rightArmSec = resolveOpt(opts.rightArm, primary, secondary, eyeColor) ?? secRightArm(primary, secondary);
-    const extrasSec   = resolveOpt(opts.extras,   primary, secondary, eyeColor) ?? '';
+    const helmet   = resolveOpt(opts.helmet,   primary, secondary, eyeColor) ?? secHelmet(primary, secondary);
+    const mouth    = resolveOpt(opts.mouth,    primary, secondary, eyeColor) ?? SEC_MOUTH_YELL;
+    const rightArm = resolveOpt(opts.rightArm, primary, secondary, eyeColor) ?? secRightArm(primary, secondary);
+    const extras   = resolveOpt(opts.extras,   primary, secondary, eyeColor) ?? '';
 
     const body = `
   ${SEC_BASE}
   ${secJersey(primary, secondary)}
   ${secLeftArm(primary, secondary)}
-  ${rightArmSec}
+  ${rightArm}
   ${SEC_NECK_HEAD}
-  ${helmetSec}
+  ${helmet}
   ${secFace(eyeColor)}
-  ${mouthSec}
-  ${extrasSec}`;
+  ${mouth}
+  ${extras}`;
 
     const numText = `<text x="100" y="160" text-anchor="middle" fill="${primary}" font-size="22" font-weight="bold" font-family="Arial Black, Arial, sans-serif">${number}</text>`;
-    const inner = mirrored
-        ? `<g transform="scale(-1,1) translate(-200,0)">${body}</g>`
+
+    const scaleX  = opts.scaleX ?? 1;
+    const scaled  = scaleX !== 1
+        ? `<g transform="translate(100,0) scale(${scaleX},1) translate(-100,0)">${body}</g>`
         : body;
+    const inner   = mirrored
+        ? `<g transform="scale(-1,1) translate(-200,0)">${scaled}</g>`
+        : scaled;
 
     return `<svg class="hockey-player" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280" style="overflow:visible">${inner}${numText}</svg>`;
 }
 
-function getCharacterSVG(char, mirrored) {
-    return makeCharacterSVG(char.primary, char.secondary, char.eyeColor, char.number, mirrored, char.opts || {});
+function getCharacterSVG(char, mirrored = false) {
+    return makeCharacterSVG(char.primary, char.secondary, char.eyeColor, char.number, mirrored, char.opts ?? {});
 }
 
-// ---------------------------------------------------------------------------
-// Character roster
-// ---------------------------------------------------------------------------
+// ---- Character roster --------------------------------------
 
 const CHARACTERS = [
     {
-        name:        'THE ROOKIE',
-        number:      '97',
-        primary:     '#FF6600',
-        secondary:   '#CC3300',
-        eyeColor:    '#FFD700',
-        tagline:     'All talk. Limited tape time.',
-        personality: 'Overconfident kid fresh out of juniors. Name-drops future stardom constantly.',
-        insecurity:  'Deep down knows he has no business being here yet.',
-        opts:        OPTS_ROOKIE,
+        name:     'THE ROOKIE',
+        number:   '97',
+        primary:  '#FF6600',
+        secondary:'#CC3300',
+        eyeColor: '#FFD700',
+        tagline:  'All talk. Limited tape time.',
+        opts:     OPTS_ROOKIE,
     },
     {
-        name:        'THE VETERAN',
-        number:      '2',
-        primary:     '#1A237E',
-        secondary:   '#0D1257',
-        eyeColor:    '#B8860B',
-        tagline:     "Been here since before you were born. He'll remind you.",
-        personality: "Grizzled old-timer. Hates everything modern. Insults like it's 1987.",
-        insecurity:  "Terrified of being forgotten. Hasn't figured out his phone.",
-        opts:        OPTS_VETERAN,
+        name:     'THE VETERAN',
+        number:   '2',
+        primary:  '#1A237E',
+        secondary:'#0D1257',
+        eyeColor: '#B8860B',
+        tagline:  "Been here since before you were born. He'll remind you.",
+        opts:     OPTS_VETERAN,
     },
     {
-        name:        "THE COACH'S SON",
-        number:      '1',
-        primary:     '#F9A825',
-        secondary:   '#F57F17',
-        eyeColor:    '#1565C0',
-        tagline:     "Doesn't need talent when dad owns the bench.",
-        personality: "Entitled, thin-skinned, absolutely convinced the team would collapse without him.",
-        insecurity:  "Knows he didn't earn a single thing. Will never admit it.",
-        opts:        OPTS_COACHES_SON,
+        name:     "THE COACH'S SON",
+        number:   '1',
+        primary:  '#F9A825',
+        secondary:'#F57F17',
+        eyeColor: '#1565C0',
+        tagline:  "Doesn't need talent when dad owns the bench.",
+        opts:     OPTS_COACHES_SON,
     },
     {
-        name:        'THE FIGURE SKATER',
-        number:      '10',
-        primary:     '#8E24AA',
-        secondary:   '#6A0080',
-        eyeColor:    '#E040FB',
-        tagline:     'Triple Axel. Triple threat. Triple offended.',
-        personality: 'Crossed over from competitive figure skating. Elegant, precise, absolutely vicious.',
-        insecurity:  'Still gets chirped about the sequins. It haunts them.',
-        opts:        OPTS_FIGURE_SKATER,
+        name:     'THE FIGURE SKATER',
+        number:   '10',
+        primary:  '#8E24AA',
+        secondary:'#6A0080',
+        eyeColor: '#E040FB',
+        tagline:  'Triple Axel. Triple threat. Triple offended.',
+        opts:     OPTS_FIGURE_SKATER,
     },
     {
-        name:        'THE BEER LEAGUER',
-        number:      '69',
-        primary:     '#2E7D32',
-        secondary:   '#1B5E20',
-        eyeColor:    '#A1887F',
-        tagline:     'Peaked at 17. Still out here though.',
-        personality: "45-year-old dad. Sunday night league. Talks about glory days to anyone who'll listen.",
-        insecurity:  "Definitely does not still have it. The knees know.",
-        opts:        OPTS_BEER_LEAGUER,
+        name:     'THE BEER LEAGUER',
+        number:   '69',
+        primary:  '#2E7D32',
+        secondary:'#1B5E20',
+        eyeColor: '#A1887F',
+        tagline:  'Peaked at 17. Still out here though.',
+        opts:     OPTS_BEER_LEAGUER,
     },
     {
-        name:        'THE GOALIE',
-        number:      '31',
-        primary:     '#0D1117',
-        secondary:   '#1C2A1C',
-        eyeColor:    '#00FFCC',
-        tagline:     'Between the pipes and beyond reason.',
-        personality: 'Goalies are famously unhinged. Superstitious, paranoid, talks to the posts between plays.',
-        insecurity:  'Everyone blames the goalie. Every single time.',
-        opts:        OPTS_GOALIE,
+        name:     'THE GOALIE',
+        number:   '31',
+        primary:  '#0D1117',
+        secondary:'#1C2A1C',
+        eyeColor: '#00FFCC',
+        tagline:  'Between the pipes and beyond reason.',
+        opts:     OPTS_GOALIE,
     },
     {
-        name:        'THE EUROPEAN IMPORT',
-        number:      '19',
-        primary:     '#D32F2F',
-        secondary:   '#B71C1C',
-        eyeColor:    '#1976D2',
-        tagline:     'Speaks three languages. All of them devastating.',
-        personality: 'Flashy skill player from overseas. Technically flawless. Culturally bewildered.',
-        insecurity:  'Desperately homesick. The food here is an insult to him personally.',
-        opts:        OPTS_EUROPEAN_IMPORT,
+        name:     'THE EUROPEAN IMPORT',
+        number:   '19',
+        primary:  '#D32F2F',
+        secondary:'#B71C1C',
+        eyeColor: '#1976D2',
+        tagline:  'Speaks three languages. All of them devastating.',
+        opts:     OPTS_EUROPEAN_IMPORT,
     },
     {
-        name:        'THE REF',
-        number:      '0',
-        primary:     '#455A64',
-        secondary:   '#263238',
-        eyeColor:    '#FF6F00',
-        tagline:     'Off the clock. Still calling penalties.',
-        personality: 'Off-duty referee who cannot turn it off. Sees every conversation as a violation.',
-        insecurity:  'Nobody has ever respected a ref. Not once in history.',
-        opts:        OPTS_REF,
+        name:     'THE REF',
+        number:   '0',
+        primary:  '#455A64',
+        secondary:'#263238',
+        eyeColor: '#FF6F00',
+        tagline:  'Off the clock. Still calling penalties.',
+        opts:     OPTS_REF,
     },
 ];
 
-// ---------------------------------------------------------------------------
-// Selection state
-// ---------------------------------------------------------------------------
+// ---- Character select screen --------------------------------
 
-const charSelectState = { p1: 0, p2: 1 };
+const csState = { p1: 0, p2: 1 };
 
 function renderPicker(player) {
-    const idx    = charSelectState[`p${player}`];
-    const char   = CHARACTERS[idx];
-    const mirror = player === 2;
+    const idx  = csState[`p${player}`];
+    const char = CHARACTERS[idx];
 
     const spriteEl = document.getElementById(`p${player}-sprite`);
-    const nameEl   = document.getElementById(`p${player}-char-name`);
-    const tagEl    = document.getElementById(`p${player}-char-tagline`);
-    const dotsEl   = document.getElementById(`p${player}-dots`);
-
     spriteEl.classList.remove('animating');
     void spriteEl.offsetWidth;
     spriteEl.classList.add('animating');
 
-    spriteEl.innerHTML  = getCharacterSVG(char, mirror);
-    nameEl.textContent  = char.name;
-    tagEl.textContent   = char.tagline;
-
-    dotsEl.innerHTML = CHARACTERS.map((_, i) =>
+    spriteEl.innerHTML = getCharacterSVG(char, player === 2);
+    document.getElementById(`p${player}-char-name`).textContent    = char.name;
+    document.getElementById(`p${player}-char-tagline`).textContent = char.tagline;
+    document.getElementById(`p${player}-dots`).innerHTML = CHARACTERS.map((_, i) =>
         `<div class="cs-dot${i === idx ? ' active' : ''}"></div>`
     ).join('');
 }
 
 function cyclePicker(player, dir) {
     const key = `p${player}`;
-    charSelectState[key] = (charSelectState[key] + dir + CHARACTERS.length) % CHARACTERS.length;
+    csState[key] = (csState[key] + dir + CHARACTERS.length) % CHARACTERS.length;
     renderPicker(player);
 }
 
 function startGame() {
-    const char1 = CHARACTERS[charSelectState.p1];
-    const char2 = CHARACTERS[charSelectState.p2];
+    const char1 = CHARACTERS[csState.p1];
+    const char2 = CHARACTERS[csState.p2];
 
+    // Expose names to game.js globals
     p1CharName = char1.name;
     p2CharName = char2.name;
 
     document.querySelector('#character1 .character-sprite').innerHTML = getCharacterSVG(char1, false);
     document.querySelector('#character2 .character-sprite').innerHTML = getCharacterSVG(char2, true);
 
-    resetGame();
-
-    document.getElementById('player1-name').textContent = char1.name;
-    document.getElementById('player2-name').textContent = char2.name;
-
     document.getElementById('character-select').style.display = 'none';
     document.getElementById('game-screen').style.display      = 'flex';
+
+    resetGame();
 }
 
-// ---------------------------------------------------------------------------
-// Boot
-// ---------------------------------------------------------------------------
+// ---- Boot --------------------------------------------------
 
 document.addEventListener('DOMContentLoaded', () => {
     renderPicker(1);
@@ -395,11 +376,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('keydown', e => {
         if (document.getElementById('character-select').style.display === 'none') return;
         switch (e.key) {
-            case 'a': case 'A':      cyclePicker(1, -1); break;
-            case 'd': case 'D':      cyclePicker(1,  1); break;
-            case 'ArrowLeft':        e.preventDefault(); cyclePicker(2, -1); break;
-            case 'ArrowRight':       e.preventDefault(); cyclePicker(2,  1); break;
-            case 'Enter': case ' ':  e.preventDefault(); startGame();        break;
+            case 'a': case 'A':     cyclePicker(1, -1); break;
+            case 'd': case 'D':     cyclePicker(1,  1); break;
+            case 'ArrowLeft':       e.preventDefault(); cyclePicker(2, -1); break;
+            case 'ArrowRight':      e.preventDefault(); cyclePicker(2,  1); break;
+            case 'Enter': case ' ': e.preventDefault(); startGame();        break;
         }
     });
 });

@@ -1,467 +1,360 @@
-// Pond Hockey Insult Simulator - Game Logic
+// ============================================================
+// game.js — state, logic, UI rendering
+// ============================================================
 
-// Player names — set by character select before resetGame() is called
-let p1CharName = 'Player 1';
-let p2CharName = 'Player 2';
+// ---- Globals set by characters.js before resetGame() -------
+let p1CharName = 'PLAYER 1';
+let p2CharName = 'PLAYER 2';
 
-// Game constants
-const AMOUNT = 13; // Board + Tea * 2
-const MIN_NOUNS = 3;
-const MAX_NOUNS = 5;
-const MIN_VERBS = 3;
-const MAX_VERBS = 5;
+// ---- Constants ---------------------------------------------
+const POOL_SIZE  = 13;
+const NOUN_MIN   = 3;
+const NOUN_MAX   = 5;
+const VERB_MIN   = 3;
+const VERB_MAX   = 5;
+const BASE_DMG   = 5;
+const MAX_DMG    = 40;
 
-// Game state
-let gameState = {
-    currentPlayer: 1,
-    round: 1,
-    players: {
-        1: { health: 100, name: 'Player 1' },
-        2: { health: 100, name: 'Player 2' }
-    },
-    availableWords: [],
-    selectedWords: [],
-    completedInsult: []
-};
+// ============================================================
+// WORD CLASSES
+// ============================================================
 
-// Word type classes
 class Word {
-    constructor(type, data) {
-        this.type = type;
-        this.data = data;
-    }
-
-    isNoun() { return this.type === 'noun'; }
-    isVerb() { return this.type === 'verb'; }
-    isEnding() { return this.type === 'ending'; }
-    isAnd() { return this.type === 'and'; }
+    constructor(type, data) { this.type = type; this.data = data; }
+    isNoun()       { return this.type === 'noun'; }
+    isVerb()       { return this.type === 'verb'; }
+    isEnding()     { return this.type === 'ending'; }
+    isAnd()        { return this.type === 'and'; }
     isUnfinished() { return this.type === 'unfinished'; }
 }
 
 class Noun extends Word {
-    constructor(heSheIt, text) {
-        super('noun', { heSheIt, text });
-    }
-
-    getText() { return this.data.text; }
-    getHeSheIt() { return this.data.heSheIt; }
+    constructor(singular, text) { super('noun', { singular, text }); }
+    getText()    { return this.data.text; }
+    isSingular() { return this.data.singular; }
+    getHeSheIt() { return this.data.singular; } // legacy compat
 }
 
 class Verb extends Word {
-    constructor(needsNoun, text) {
-        super('verb', { needsNoun, text });
-    }
-
-    getText(heSheIt) {
-        let text = this.data.text;
-
-        // Replace grammar templates based on subject
-        if (heSheIt) {
-            text = text.replace(/\[is\/are\]/g, 'is')
-                      .replace(/\[was\/were\]/g, 'was')
-                      .replace(/\[has\/have\]/g, 'has')
-                      .replace(/\(s\)/g, 's');
-        } else {
-            text = text.replace(/\[is\/are\]/g, 'are')
-                      .replace(/\[was\/were\]/g, 'were')
-                      .replace(/\[has\/have\]/g, 'have')
-                      .replace(/\(s\)/g, '');
-        }
-
-        return text;
-    }
-
+    constructor(needsNoun, text) { super('verb', { needsNoun, text }); }
     needsNoun() { return this.data.needsNoun; }
+    getText(singular) {
+        let t = this.data.text;
+        if (singular) {
+            return t.replace(/\[is\/are\]/g,   'is')
+                    .replace(/\[was\/were\]/g,  'was')
+                    .replace(/\[has\/have\]/g,  'has')
+                    .replace(/\(s\)/g,          's');
+        }
+        return     t.replace(/\[is\/are\]/g,   'are')
+                    .replace(/\[was\/were\]/g,  'were')
+                    .replace(/\[has\/have\]/g,  'have')
+                    .replace(/\(s\)/g,          '');
+    }
 }
 
 class Ending extends Word {
-    constructor(text) {
-        super('ending', { text });
-    }
-
+    constructor(text) { super('ending', { text }); }
     getText() { return this.data.text; }
 }
 
 class AndWord extends Word {
-    constructor() {
-        super('and', {});
-    }
-
+    constructor() { super('and', {}); }
     getText() { return 'and'; }
 }
 
 class Unfinished extends Word {
-    constructor() {
-        super('unfinished', {});
+    constructor() { super('unfinished', {}); }
+    getText() { return '...eh...'; }
+}
+
+// ============================================================
+// UTILITY
+// ============================================================
+
+const rand     = n   => Math.floor(Math.random() * n);
+const pick     = arr => arr[rand(arr.length)];
+
+function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = rand(i + 1);
+        [a[i], a[j]] = [a[j], a[i]];
     }
-
-    getText() { return '... eh... uhnn...'; }
+    return a;
 }
 
-// Random utility
-function random(max) {
-    return Math.floor(Math.random() * max);
-}
+// ============================================================
+// WORD POOL — deterministic shuffle, no while loop
+// ============================================================
 
-function randomBool() {
-    return Math.random() < 0.5;
-}
-
-function randomChoice(array) {
-    return array[random(array.length)];
-}
-
-// Generate initial word pool
 function generateWordPool() {
-    const words = [];
-    let numNouns = 0;
-    let numVerbs = 0;
+    const nounCount = NOUN_MIN + rand(NOUN_MAX - NOUN_MIN + 1);
+    const verbCount = VERB_MIN + rand(VERB_MAX - VERB_MIN + 1);
+    const leftover  = POOL_SIZE - nounCount - verbCount;
 
-    while (words.length < AMOUNT) {
-        if (numNouns < MAX_NOUNS && randomBool()) {
-            numNouns++;
-            const [heSheIt, text] = randomChoice(WORDS.nouns);
-            words.push(new Noun(heSheIt, text));
-        } else if (numVerbs < MAX_VERBS && randomBool()) {
-            numVerbs++;
-            const [needsNoun, text] = randomChoice(WORDS.verbs);
-            words.push(new Verb(needsNoun, text));
-        } else if (numNouns >= MIN_NOUNS && numVerbs >= MIN_VERBS) {
-            const roll = random(10);
-            if (roll === 0) {
-                const [, text] = randomChoice(WORDS.endings);
-                words.push(new Ending(text));
-            } else if (roll === 1) {
-                words.push(new AndWord());
-            }
+    const nouns = shuffle(WORDS.nouns)
+        .slice(0, nounCount)
+        .map(([s, t]) => new Noun(s, t));
+
+    const verbs = shuffle(WORDS.verbs)
+        .slice(0, verbCount)
+        .map(([n, t]) => new Verb(n, t));
+
+    const extras = Array.from({ length: leftover }, () => {
+        if (rand(4) === 0) {
+            const [, t] = pick(WORDS.endings);
+            return new Ending(t);
         }
-    }
+        return new AndWord();
+    });
 
-    return words;
+    return shuffle([...nouns, ...verbs, ...extras]);
 }
 
-// Generate AI insult
-function generateAIInsult(words) {
-    const completed = [];
-    let currentHeSheIt = false;
+// ============================================================
+// INSULT FORMATTING
+// ============================================================
 
-    // Helper to find and remove word by type
-    function takeWord(filterFn) {
-        const matches = [];
-        words.forEach((word, i) => {
-            if (filterFn(word)) matches.push(i);
-        });
-        if (matches.length === 0) return null;
-        const index = randomChoice(matches);
-        return words.splice(index, 1)[0];
+function formatInsult(words) {
+    let result   = '';
+    let singular = false;
+
+    for (let i = 0; i < words.length; i++) {
+        const w = words[i];
+        if (w.isEnding()) result += ',';
+        if (i > 0 && !w.isUnfinished()) result += ' ';
+
+        if      (w.isNoun())       { singular = w.isSingular(); result += w.getText(); }
+        else if (w.isVerb())       { result += w.getText(singular); }
+        else if (w.isEnding())     { result += w.getText(); }
+        else if (w.isAnd())        { result += 'and'; }
+        else if (w.isUnfinished()) { result += w.getText(); }
     }
 
-    // Start with noun
-    const firstNoun = takeWord(w => w.isNoun());
-    if (firstNoun) {
-        currentHeSheIt = firstNoun.getHeSheIt();
-        completed.push(firstNoun);
-
-        // Maybe add "and noun"
-        if (randomBool() && takeWord(w => w.isAnd()) && takeWord(w => w.isNoun())) {
-            completed.push(new AndWord());
-            const secondNoun = takeWord(w => w.isNoun());
-            if (secondNoun) {
-                secondNoun.data.heSheIt = false; // Override to plural
-                completed.push(secondNoun);
-            }
-        }
-    }
-
-    // Add verb
-    const verb = takeWord(w => w.isVerb());
-    if (verb) {
-        completed.push(verb);
-        if (verb.needsNoun()) {
-            const noun = takeWord(w => w.isNoun());
-            if (noun) {
-                completed.push(noun);
-            } else {
-                completed.push(new Unfinished());
-            }
-        }
-
-        // Maybe add "and verb"
-        if (randomBool() && takeWord(w => w.isAnd()) && takeWord(w => w.isVerb())) {
-            completed.push(new AndWord());
-            const secondVerb = takeWord(w => w.isVerb());
-            if (secondVerb) {
-                completed.push(secondVerb);
-                if (secondVerb.needsNoun()) {
-                    const noun = takeWord(w => w.isNoun());
-                    if (noun) {
-                        completed.push(noun);
-                    }
-                }
-            }
-        }
-    }
-
-    // Maybe add ending
-    if (randomBool()) {
-        const ending = takeWord(w => w.isEnding());
-        if (ending) completed.push(ending);
-    }
-
-    return { completed, currentHeSheIt };
-}
-
-// Format insult for display
-function formatInsult(completed, currentHeSheIt) {
-    let result = '';
-    let heSheIt = currentHeSheIt;
-
-    for (let i = 0; i < completed.length; i++) {
-        const word = completed[i];
-
-        if (word.isEnding()) {
-            result += ',';
-        }
-
-        if (i > 0 && !word.isUnfinished()) {
-            result += ' ';
-        }
-
-        if (word.isNoun()) {
-            heSheIt = word.getHeSheIt();
-            result += word.getText();
-        } else if (word.isVerb()) {
-            result += word.getText(heSheIt);
-        } else if (word.isEnding()) {
-            result += word.getText();
-        } else if (word.isAnd()) {
-            result += word.getText();
-        } else if (word.isUnfinished()) {
-            result += word.getText();
-        }
-    }
-
-    const last = completed[completed.length - 1];
-    if (last && !last.isEnding() && !last.isUnfinished()) {
-        result += '!';
-    }
-
+    const last = words[words.length - 1];
+    if (last && !last.isEnding() && !last.isUnfinished()) result += '!';
     return result;
 }
 
-// Calculate damage based on insult quality
-function calculateDamage(completed) {
-    let damage = 5; // Base damage
+// ============================================================
+// DAMAGE
+// ============================================================
 
-    // More words = more damage
-    damage += completed.length * 2;
-
-    // Bonus for complete sentences
-    const hasNoun = completed.some(w => w.isNoun());
-    const hasVerb = completed.some(w => w.isVerb());
-    if (hasNoun && hasVerb) damage += 10;
-
-    // Bonus for endings
-    if (completed.some(w => w.isEnding())) damage += 5;
-
-    // Penalty for unfinished
-    if (completed.some(w => w.isUnfinished())) damage -= 10;
-
-    // Add some randomness
-    damage += random(10);
-
-    return Math.max(5, Math.min(40, damage));
+function calculateDamage(words) {
+    let dmg = BASE_DMG + words.length * 2;
+    if (words.some(w => w.isNoun()) && words.some(w => w.isVerb())) dmg += 10;
+    if (words.some(w => w.isEnding()))     dmg += 5;
+    if (words.some(w => w.isUnfinished())) dmg -= 10;
+    dmg += rand(10);
+    return Math.max(5, Math.min(MAX_DMG, dmg));
 }
 
-// UI Functions
-function updateHealthBar(player) {
-    const health = gameState.players[player].health;
-    const healthBar = document.getElementById(`player${player}-health`);
-    healthBar.style.width = health + '%';
+// ============================================================
+// GAME STATE
+// ============================================================
 
-    // Color based on health
-    if (health > 60) {
-        healthBar.style.background = 'linear-gradient(to right, #4ade80, #22c55e)';
-    } else if (health > 30) {
-        healthBar.style.background = 'linear-gradient(to right, #fbbf24, #f59e0b)';
+let state = {
+    currentPlayer: 1,
+    round: 1,
+    players: {
+        1: { health: 100, name: 'PLAYER 1' },
+        2: { health: 100, name: 'PLAYER 2' },
+    },
+    pool:     [],
+    selected: [],
+};
+
+// ============================================================
+// UI — RENDERING
+// ============================================================
+
+function renderHealth(player) {
+    const hp  = state.players[player].health;
+    const bar = document.getElementById(`player${player}-health`);
+    bar.style.width = hp + '%';
+
+    const seg = 'repeating-linear-gradient(90deg, transparent, transparent 9px, rgba(0,0,0,0.35) 9px, rgba(0,0,0,0.35) 10px)';
+    if (hp > 60) {
+        bar.style.backgroundImage = '';
+        bar.style.boxShadow       = '';
+    } else if (hp > 30) {
+        bar.style.backgroundImage = `${seg}, linear-gradient(90deg, #ffdd44 0%, #ffaa00 100%)`;
+        bar.style.boxShadow       = '0 0 14px rgba(255,180,0,0.55)';
     } else {
-        healthBar.style.background = 'linear-gradient(to right, #ef4444, #dc2626)';
+        bar.style.backgroundImage = `${seg}, linear-gradient(90deg, #ff8888 0%, #ff2244 100%)`;
+        bar.style.boxShadow       = '0 0 18px rgba(255,34,68,0.7)';
     }
 }
 
-function updateTurnIndicator() {
-    const turnText = document.getElementById('current-turn');
-    turnText.textContent = gameState.players[gameState.currentPlayer].name;
+function renderRound() {
+    document.getElementById('round-number').textContent = state.round;
 }
 
-function updateRound() {
-    document.getElementById('round-number').textContent = gameState.round;
+function renderTurnIndicator() {
+    document.getElementById('current-turn').textContent = state.players[state.currentPlayer].name;
 }
 
-function displayInsult(text) {
-    const insultDiv = document.getElementById('current-insult');
-    insultDiv.textContent = text;
+function renderInsult(text) {
+    document.getElementById('current-insult').textContent = text;
 }
 
-function showDamage(damage, target) {
-    const indicator = document.getElementById('damage-indicator');
-    indicator.textContent = `-${damage} HP`;
-    indicator.style.display = 'block';
-    indicator.classList.add('show');
-
-    setTimeout(() => {
-        indicator.classList.remove('show');
-        setTimeout(() => {
-            indicator.style.display = 'none';
-        }, 300);
-    }, 1500);
-}
-
-function renderAvailableWords() {
+function renderWordPool() {
     const container = document.getElementById('available-words');
     container.innerHTML = '';
 
-    gameState.availableWords.forEach((word, index) => {
-        const button = document.createElement('button');
-        button.className = 'word-button';
+    state.pool.forEach((word, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'word-button';
 
-        let displayText = '';
-        if (word.isNoun()) {
-            displayText = word.getText();
-            button.classList.add('noun');
-        } else if (word.isVerb()) {
-            displayText = word.getText(true); // Show with singular form
-            button.classList.add('verb');
-        } else if (word.isEnding()) {
-            displayText = word.getText();
-            button.classList.add('ending');
-        } else if (word.isAnd()) {
-            displayText = 'and';
-            button.classList.add('and');
-        }
+        if      (word.isNoun())   { btn.textContent = word.getText();       btn.classList.add('noun'); }
+        else if (word.isVerb())   { btn.textContent = word.getText(true);   btn.classList.add('verb'); }
+        else if (word.isEnding()) { btn.textContent = word.getText();       btn.classList.add('ending'); }
+        else if (word.isAnd())    { btn.textContent = 'and';                btn.classList.add('and'); }
 
-        button.textContent = displayText;
-        button.onclick = () => selectWord(index);
-        container.appendChild(button);
+        btn.addEventListener('click', () => selectWord(i));
+        container.appendChild(btn);
     });
 }
 
-function selectWord(index) {
-    const word = gameState.availableWords.splice(index, 1)[0];
-    gameState.selectedWords.push(word);
-    updateCurrentInsult();
-    renderAvailableWords();
-}
-
-function updateCurrentInsult() {
-    if (gameState.selectedWords.length === 0) {
-        displayInsult('Select words to build your insult!');
+function renderSelectedWords() {
+    if (state.selected.length === 0) {
+        renderInsult('Select words to build your insult!');
         return;
     }
-
-    let heSheIt = false;
-    const text = gameState.selectedWords.map(word => {
-        if (word.isNoun()) {
-            heSheIt = word.getHeSheIt();
-            return word.getText();
-        } else if (word.isVerb()) {
-            return word.getText(heSheIt);
-        } else if (word.isEnding()) {
-            return word.getText();
-        } else if (word.isAnd()) {
-            return word.getText();
-        }
+    let singular = false;
+    const text = state.selected.map(w => {
+        if      (w.isNoun())   { singular = w.isSingular(); return w.getText(); }
+        else if (w.isVerb())   { return w.getText(singular); }
+        else if (w.isEnding()) { return w.getText(); }
+        else if (w.isAnd())    { return 'and'; }
+        return '';
     }).join(' ');
+    renderInsult(text + '...');
+}
 
-    displayInsult(text + '...');
+function showDamage(dmg) {
+    const el = document.getElementById('damage-indicator');
+    el.textContent = `-${dmg} HP`;
+    el.style.display = 'block';
+    el.classList.remove('show');
+    void el.offsetWidth; // restart animation
+    el.classList.add('show');
+    setTimeout(() => {
+        el.classList.remove('show');
+        setTimeout(() => { el.style.display = 'none'; }, 300);
+    }, 1500);
+}
+
+function showFog(player) {
+    const fog = document.getElementById(`p${player}-fog`);
+    fog.classList.add('active');
+    setTimeout(() => fog.classList.remove('active'), 900);
+}
+
+function animateCharacter(player, cls) {
+    const el = document.getElementById(`character${player}`);
+    el.classList.add(cls);
+    el.addEventListener('animationend', () => el.classList.remove(cls), { once: true });
+}
+
+// ============================================================
+// WIN SCREEN
+// ============================================================
+
+function showWinScreen(winnerName) {
+    document.getElementById('go-winner-text').textContent = winnerName;
+    document.getElementById('game-over-overlay').style.display = 'flex';
+}
+
+function hideWinScreen() {
+    document.getElementById('game-over-overlay').style.display = 'none';
+}
+
+// ============================================================
+// GAME ACTIONS
+// ============================================================
+
+function selectWord(index) {
+    const word = state.pool.splice(index, 1)[0];
+    state.selected.push(word);
+    showFog(state.currentPlayer);
+    renderWordPool();
+    renderSelectedWords();
 }
 
 function finishInsult() {
-    if (gameState.selectedWords.length === 0) {
-        alert('Select at least one word!');
+    if (state.selected.length === 0) return;
+
+    const attacker = state.currentPlayer;
+    const defender = attacker === 1 ? 2 : 1;
+    const text      = formatInsult(state.selected);
+    const dmg       = calculateDamage(state.selected);
+
+    state.players[defender].health = Math.max(0, state.players[defender].health - dmg);
+
+    renderInsult(text);
+    showDamage(dmg);
+    renderHealth(defender);
+    animateCharacter(attacker, 'attacking');
+    animateCharacter(defender, 'damaged');
+
+    if (state.players[defender].health <= 0) {
+        setTimeout(() => showWinScreen(state.players[attacker].name), 1800);
         return;
     }
 
-    // Calculate current player's insult
-    let heSheIt = false;
-    gameState.selectedWords.forEach(word => {
-        if (word.isNoun()) heSheIt = word.getHeSheIt();
-    });
-
-    const insultText = formatInsult(gameState.selectedWords, heSheIt);
-    const damage = calculateDamage(gameState.selectedWords);
-
-    // Apply damage to other player
-    const targetPlayer = gameState.currentPlayer === 1 ? 2 : 1;
-    gameState.players[targetPlayer].health = Math.max(0, gameState.players[targetPlayer].health - damage);
-
-    // Show insult and damage
-    displayInsult(insultText);
-    showDamage(damage, targetPlayer);
-    updateHealthBar(targetPlayer);
-
-    // Check for winner
-    if (gameState.players[targetPlayer].health <= 0) {
-        setTimeout(() => {
-            alert(`${gameState.players[gameState.currentPlayer].name} wins!`);
-            resetGame();
-        }, 2000);
-        return;
-    }
-
-    // Next turn
-    setTimeout(() => {
-        nextTurn();
-    }, 2500);
+    setTimeout(nextTurn, 2500);
 }
 
 function nextTurn() {
-    gameState.currentPlayer = gameState.currentPlayer === 1 ? 2 : 1;
-
-    if (gameState.currentPlayer === 1) {
-        gameState.round++;
-        updateRound();
+    state.currentPlayer = state.currentPlayer === 1 ? 2 : 1;
+    if (state.currentPlayer === 1) {
+        state.round++;
+        renderRound();
     }
-
-    // Generate new words
-    gameState.availableWords = generateWordPool();
-    gameState.selectedWords = [];
-
-    updateTurnIndicator();
-    renderAvailableWords();
-    displayInsult('Select words to build your insult!');
+    state.pool     = generateWordPool();
+    state.selected = [];
+    renderWordPool();
+    renderSelectedWords();
+    renderTurnIndicator();
 }
 
 function resetGame() {
-    gameState = {
+    hideWinScreen();
+    state = {
         currentPlayer: 1,
         round: 1,
         players: {
             1: { health: 100, name: p1CharName },
-            2: { health: 100, name: p2CharName }
+            2: { health: 100, name: p2CharName },
         },
-        availableWords: generateWordPool(),
-        selectedWords: [],
-        completedInsult: []
+        pool:     generateWordPool(),
+        selected: [],
     };
-
     document.getElementById('player1-name').textContent = p1CharName;
     document.getElementById('player2-name').textContent = p2CharName;
-    updateHealthBar(1);
-    updateHealthBar(2);
-    updateTurnIndicator();
-    updateRound();
-    renderAvailableWords();
-    displayInsult('Select words to build your insult!');
+    renderHealth(1);
+    renderHealth(2);
+    renderRound();
+    renderTurnIndicator();
+    renderWordPool();
+    renderSelectedWords();
 }
 
-// Event listeners
+// ============================================================
+// INIT
+// ============================================================
+
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('finish-insult-btn').addEventListener('click', finishInsult);
     document.getElementById('reset-btn').addEventListener('click', resetGame);
+    document.getElementById('go-rematch-btn').addEventListener('click', resetGame);
+    document.getElementById('go-menu-btn').addEventListener('click', () => {
+        hideWinScreen();
+        document.getElementById('game-screen').style.display      = 'none';
+        document.getElementById('character-select').style.display = 'flex';
+    });
 
-    // Initialize game
     resetGame();
 });
-
-console.log('Pond Hockey Insult Simulator - Ready to play!');
