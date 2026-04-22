@@ -16,9 +16,24 @@ They follow the XDG standard, so by default they're in `~/.config/insult`.
 
 ## Installing!
 
-The easiest way to install is with cargo:  
+The easiest way to install is with cargo:
 ```
 cargo install insult
+```
+
+## Running from Source!
+
+To clone and run this project directly:
+```bash
+git clone https://github.com/nwrenn27-sketch/Insult-Simulator.git
+cd Insult-Simulator
+cargo run
+```
+
+Or to build and install locally:
+```bash
+cargo build --release
+cargo install --path .
 ```
 
 # Library!
