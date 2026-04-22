@@ -219,18 +219,11 @@ function renderWordPool() {
 
 function renderSelectedWords() {
     if (state.selected.length === 0) {
-        renderInsult('Select words to build your insult!');
+        renderInsult(state.lastInsultText || 'Select words to build your insult!');
         return;
     }
-    let singular = false;
-    const text = state.selected.map(w => {
-        if      (w.isNoun())   { singular = w.isSingular(); return w.getText(); }
-        else if (w.isVerb())   { return w.getText(singular); }
-        else if (w.isEnding()) { return w.getText(); }
-        else if (w.isAnd())    { return 'and'; }
-        return '';
-    }).join(' ');
-    renderInsult(text + '...');
+    const text = formatInsult(state.selected).replace(/!$/, '...');
+    renderInsult(text);
 }
 
 function showDamage(dmg) {
@@ -292,6 +285,7 @@ function finishInsult() {
     const dmg       = calculateDamage(state.selected);
 
     state.players[defender].health = Math.max(0, state.players[defender].health - dmg);
+    state.lastInsultText = text;
 
     renderInsult(text);
     showDamage(dmg);
@@ -329,8 +323,9 @@ function resetGame() {
             1: { health: 100, name: p1CharName },
             2: { health: 100, name: p2CharName },
         },
-        pool:     generateWordPool(),
-        selected: [],
+        pool:          generateWordPool(),
+        selected:      [],
+        lastInsultText: '',
     };
     document.getElementById('player1-name').textContent = p1CharName;
     document.getElementById('player2-name').textContent = p2CharName;
