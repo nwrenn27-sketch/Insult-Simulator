@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pond Hockey Insult Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg:    #05070f;
+  --panel: #080c1a;
+  --dim:   #1c2840;
+  --text:  #c8dcf0;
+  --cyan:  #00e5ff;
+  --red:   #ff2244;
+  --gold:  #ffd700;
+  --green: #00ff88;
+  --purple:#cc44ff;
+  --px: 'Press Start 2P', monospace;
+  --vt: 'VT323', monospace;
+}
+
+/* CRT overlay */
+body::before {
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:9999;
+  background: repeating-linear-gradient(to bottom, transparent 0px, transparent 3px, rgba(0,0,0,0.18) 3px, rgba(0,0,0,0.18) 4px);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--vt);
+  font-size: 20px;
+  overflow-x: hidden;
+}
+
+/* ── HERO ───────────────────────────────────────────────── */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 40px 40px;
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 20%, rgba(0,80,180,0.09) 0%, transparent 60%);
+}
+
+.hero-grid {
+  position: absolute; inset:0;
+  background:
+    repeating-linear-gradient(0deg, transparent 0px, transparent 60px, rgba(255,255,255,0.004) 60px, rgba(255,255,255,0.004) 61px),
+    repeating-linear-gradient(90deg, transparent 0px, transparent 120px, rgba(255,255,255,0.003) 120px, rgba(255,255,255,0.003) 121px);
+}
+
+.neon-trim {
+  position: absolute; top:0; left:0; right:0; height:4px;
+  background: linear-gradient(90deg, transparent, var(--cyan), var(--gold), var(--cyan), transparent);
+}
+
+@keyframes titleGlow {
+  0%,100% { text-shadow: 0 0 20px rgba(255,215,0,0.8), 0 0 60px rgba(255,215,0,0.3), 4px 4px 0 rgba(0,0,0,0.95); }
+  50%      { text-shadow: 0 0 40px rgba(255,215,0,1),   0 0 100px rgba(255,215,0,0.5), 4px 4px 0 rgba(0,0,0,0.95); }
+}
+@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
+@keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+
+.hero-eyebrow {
+  font-family: var(--px); font-size: 8px; color: var(--cyan);
+  letter-spacing: 5px; text-transform: uppercase;
+  text-shadow: 0 0 12px rgba(0,229,255,0.8);
+  animation: fadeUp 0.6s ease 0.1s both;
+  margin-bottom: 20px;
+}
+
+.hero-title {
+  font-family: var(--px); font-size: clamp(22px, 3.5vw, 44px);
+  color: var(--gold); text-transform: uppercase; letter-spacing: 4px;
+  text-align: center; line-height: 1.5;
+  animation: titleGlow 3s ease-in-out infinite, fadeUp 0.6s ease 0.2s both;
+  position: relative; z-index: 2;
+}
+
+.hero-sub {
+  font-family: var(--vt); font-size: clamp(22px, 2.5vw, 32px);
+  color: rgba(200,220,255,0.55); text-align: center; margin-top: 16px;
+  animation: fadeUp 0.6s ease 0.4s both; max-width: 700px;
+}
+
+.hero-chars {
+  display: flex; gap: 0; margin-top: 32px; align-items: flex-end; justify-content: center;
+  animation: fadeIn 0.8s ease 0.6s both;
+}
+
+.hero-chars svg { width: 90px; height: 115px; overflow: visible; }
+
+.hero-badges {
+  display: flex; gap: 16px; margin-top: 28px; flex-wrap: wrap; justify-content: center;
+  animation: fadeUp 0.6s ease 0.7s both;
+}
+
+.badge {
+  font-family: var(--px); font-size: 7px; letter-spacing: 2px; padding: 8px 16px;
+  border: 2px solid; text-transform: uppercase;
+}
+.badge-cyan   { color: var(--cyan);   border-color: rgba(0,229,255,0.4);   background: rgba(0,229,255,0.05); }
+.badge-gold   { color: var(--gold);   border-color: rgba(255,215,0,0.4);   background: rgba(255,215,0,0.05); }
+.badge-green  { color: var(--green);  border-color: rgba(0,255,136,0.4);   background: rgba(0,255,136,0.05); }
+.badge-purple { color: var(--purple); border-color: rgba(204,68,255,0.4);  background: rgba(204,68,255,0.05); }
+
+.scroll-hint {
+  position: absolute; bottom: 28px;
+  font-family: var(--px); font-size: 7px; color: rgba(200,220,255,0.25);
+  letter-spacing: 3px; animation: fadeIn 1s ease 1.5s both;
+}
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(6px)} }
+.scroll-arrow { animation: bounce 1.6s ease-in-out infinite; display:block; margin-top:6px; font-size:12px; }
+
+/* ── SECTIONS ────────────────────────────────────────────── */
+section {
+  max-width: 1100px; margin: 0 auto; padding: 80px 40px;
+}
+
+.section-label {
+  font-family: var(--px); font-size: 7px; color: var(--cyan);
+  letter-spacing: 4px; text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(0,229,255,0.6);
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-family: var(--px); font-size: clamp(14px, 2vw, 20px);
+  color: #fff; letter-spacing: 2px; text-transform: uppercase;
+  margin-bottom: 24px; text-shadow: 2px 2px 0 rgba(0,0,0,0.8);
+}
+
+.prose {
+  font-family: var(--vt); font-size: 24px; color: rgba(200,220,255,0.8);
+  line-height: 1.6; max-width: 680px;
+}
+
+.divider {
+  width: 100%; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--dim), transparent);
+}
+
+/* ── HOW IT WORKS ────────────────────────────────────────── */
+.mechanics-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;
+  margin-top: 32px;
+}
+
+.mech-card {
+  background: var(--panel); border: 2px solid var(--dim);
+  padding: 20px; display: flex; flex-direction: column; gap: 10px;
+}
+
+.mech-icon {
+  font-family: var(--px); font-size: 9px; letter-spacing: 2px;
+}
+
+.mech-title {
+  font-family: var(--px); font-size: 8px; color: #fff; letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.mech-body {
+  font-family: var(--vt); font-size: 20px; color: rgba(200,220,255,0.65);
+  line-height: 1.5;
+}
+
+/* Damage formula display */
+.formula-box {
+  background: #03050d; border: 3px solid var(--gold);
+  padding: 24px 28px; margin-top: 32px; position: relative;
+  box-shadow: 0 0 30px rgba(255,215,0,0.08), inset 0 0 20px rgba(0,0,0,0.5);
+}
+.formula-box::before {
+  content: '// DAMAGE FORMULA //'; position: absolute; top:-12px; left:18px;
+  font-family: var(--px); font-size: 7px; color: var(--gold);
+  background: #03050d; padding: 2px 8px; letter-spacing: 3px;
+  text-shadow: 0 0 8px rgba(255,215,0,0.8);
+}
+.formula {
+  font-family: var(--vt); font-size: 26px; color: #fff;
+  line-height: 1.8; text-transform: uppercase;
+}
+.formula .val    { color: var(--cyan);   text-shadow: 0 0 8px rgba(0,229,255,0.5); }
+.formula .bonus  { color: var(--green);  text-shadow: 0 0 8px rgba(0,255,136,0.5); }
+.formula .malus  { color: var(--red);    text-shadow: 0 0 8px rgba(255,34,68,0.5); }
+.formula .label  { color: rgba(200,220,255,0.4); font-size: 20px; }
+
+/* ── CODE BLOCKS ─────────────────────────────────────────── */
+.code-section { background: #03050a; border-top: 1px solid var(--dim); border-bottom: 1px solid var(--dim); padding: 80px 0; }
+.code-section > div { max-width: 1100px; margin: 0 auto; padding: 0 40px; }
+
+.code-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 32px; }
+@media (max-width: 800px) { .code-grid { grid-template-columns: 1fr; } }
+
+.code-card {
+  background: #050810; border: 2px solid var(--dim);
+  display: flex; flex-direction: column;
+}
+.code-notes {
+  background: #030508; border-top: 2px solid var(--dim);
+  padding: 14px 18px; display: flex; flex-direction: column; gap: 7px;
+}
+.note-line {
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.note-num {
+  font-family: var(--px); font-size: 6px; color: var(--gold);
+  opacity: 0.7; flex-shrink: 0; margin-top: 3px; min-width: 16px;
+}
+.note-text {
+  font-family: var(--vt); font-size: 17px; color: rgba(196,184,148,0.7);
+  line-height: 1.4;
+}
+.code-header {
+  background: #0a0e1c; padding: 10px 16px;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 2px solid var(--dim);
+}
+.code-dot { width:10px; height:10px; border-radius:50%; }
+.code-filename {
+  font-family: var(--px); font-size: 7px; color: rgba(200,220,255,0.4);
+  letter-spacing: 2px; margin-left: 4px;
+}
+.code-tag {
+  font-family: var(--px); font-size: 6px; letter-spacing: 1px;
+  padding: 3px 8px; border: 1px solid; margin-left: auto;
+}
+
+pre {
+  padding: 20px; overflow-x: auto; font-family: 'VT323', monospace;
+  font-size: 18px; line-height: 1.6; flex: 1;
+}
+
+/* Syntax colors */
+.kw  { color: #cc44ff; }   /* keyword */
+.fn  { color: #00e5ff; }   /* function name */
+.str { color: #00ff88; }   /* string */
+.num { color: #ffd700; }   /* number */
+.cmt { color: rgba(200,220,255,0.3); font-style: italic; }
+.op  { color: rgba(200,220,255,0.5); }
+.var { color: var(--text); }
+.cls { color: #ff8899; }   /* class/type */
+.ret { color: #ffdd66; }   /* return value highlight */
+
+/* ── DEMO SECTION ────────────────────────────────────────── */
+.demo-section {
+  background: #03050a;
+  padding: 80px 40px;
+  text-align: center;
+  border-top: 1px solid var(--dim);
+}
+.demo-section .section-label,
+.demo-section .section-title { text-align: center; }
+.demo-section .section-label { display: block; }
+.demo-section .section-title { display: block; }
+
+.demo-frame-wrap {
+  margin-top: 32px; position: relative; display: inline-block;
+  box-shadow: 0 0 0 4px var(--cyan), 0 0 0 6px var(--bg), 0 0 60px rgba(0,229,255,0.2), 0 0 120px rgba(0,229,255,0.06);
+}
+.demo-frame-wrap::before {
+  content: ''; position: absolute; top:0; left:0; right:0; height:3px;
+  background: linear-gradient(90deg, transparent, var(--cyan), var(--gold), var(--cyan), transparent);
+  z-index: 10;
+}
+
+iframe {
+  display: block; border: none;
+  width: min(95vw, 1200px); height: min(70vh, 700px);
+}
+
+/* ── FOOTER ──────────────────────────────────────────────── */
+footer {
+  background: #03050a; padding: 32px 40px;
+  border-top: 3px solid var(--dim);
+  display: flex; justify-content: center; align-items: center; gap: 32px;
+  flex-wrap: wrap;
+}
+.footer-item {
+  font-family: var(--px); font-size: 7px;
+  color: rgba(200,220,255,0.28); letter-spacing: 2px; text-transform: uppercase;
+}
+.footer-accent { color: var(--gold); text-shadow: 0 0 8px rgba(255,215,0,0.5); }
+
+/* Word type legend */
+.word-legend { display:flex; gap:12px; flex-wrap:wrap; margin-top:24px; }
+.wl-chip {
+  font-family: var(--vt); font-size: 20px; text-transform: uppercase;
+  padding: 4px 14px; border: 2px solid;
+}
+.wl-noun   { color:#66ccff; border-color:#0088cc; background:#00101e; }
+.wl-verb   { color:#ff8899; border-color:#cc1a33; background:#1a0008; }
+.wl-ending { color:#ffdd66; border-color:#bb8800; background:#140e00; }
+.wl-and    { color:#dd88ff; border-color:#8822bb; background:#120020; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════
+     HERO
+════════════════════════════════════════════════════ -->
+<div class="hero">
+  <div class="hero-grid"></div>
+  <div class="neon-trim"></div>
+
+  <div class="hero-eyebrow">Nolan Wrenn · Advanced Coding · Spring 2026</div>
+
+  <h1 class="hero-title">POND HOCKEY<br>INSULT SIMULATOR</h1>
+  <p class="hero-sub">A two-player browser game where words deal damage — the nastier the chirp, the more HP you drain.</p>
+
+  <!-- Inline character sprites -->
+  <div class="hero-chars" id="hero-chars"></div>
+
+  <div class="hero-badges">
+    <div class="badge badge-cyan">Plain HTML · CSS · JS</div>
+    <div class="badge badge-gold">8 Characters</div>
+    <div class="badge badge-green">100+ Words</div>
+    <div class="badge badge-purple">No Build Step</div>
+  </div>
+
+  <div class="scroll-hint">
+    SCROLL TO EXPLORE
+    <span class="scroll-arrow">▼</span>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     WHAT IT IS
+════════════════════════════════════════════════════ -->
+<section>
+  <div class="section-label">// Overview //</div>
+  <div class="section-title">What Is It?</div>
+  <p class="prose">
+    Inspired by <em style="color:#fff">Oh... Sir! The Insult Simulator</em>, this is a local two-player browser game built entirely in vanilla HTML, CSS, and JavaScript. Players pick a hockey archetype, then take turns assembling chirps from a randomized word pool. Insults deal damage based on grammar — use a noun, a verb, and a punchy ending, and you hit harder.
+  </p>
+  <p class="prose" style="margin-top:16px">
+    No libraries. No frameworks. No server. Open the file and play.
+  </p>
+
+  <div class="formula-box" style="margin-top:40px">
+    <div class="formula">
+      Damage <span class="op">=</span> <span class="val">5</span>
+      <span class="op"> + </span><span class="val">words × 2</span>
+      <span class="bonus"> + 10 <span class="label">(noun + verb combo)</span></span>
+      <span class="bonus"> + 5 &nbsp;<span class="label">(ending used)</span></span>
+      <span class="malus"> − 10 <span class="label">(unfinished chirp)</span></span>
+      <span class="op"> + </span><span class="val">random(10)</span>
+      <br>
+      <span class="label">capped between 5 and 40 HP &nbsp;·&nbsp; opponent starts at 100 HP</span>
+    </div>
+  </div>
+
+  <div class="mechanics-grid" style="margin-top:40px">
+    <div class="mech-card">
+      <div class="mech-icon" style="color:var(--gold)">⬡ CHARACTER SELECT</div>
+      <div class="mech-title">Pick Your Fighter</div>
+      <div class="mech-body">8 hockey archetypes, each with unique SVG sprites built from code — no images anywhere in the project.</div>
+    </div>
+    <div class="mech-card">
+      <div class="mech-icon" style="color:var(--cyan)">⬡ WORD POOL</div>
+      <div class="mech-title">Randomized Each Turn</div>
+      <div class="mech-body">13 words drawn from 3–5 nouns, 3–5 verbs, plus endings and "and" fillers. No two turns are the same.</div>
+    </div>
+    <div class="mech-card">
+      <div class="mech-icon" style="color:var(--red)">⬡ GRAMMAR = DAMAGE</div>
+      <div class="mech-title">Syntax Matters</div>
+      <div class="mech-body">Verbs conjugate live based on the noun's singular/plural status. The engine parses your chirp like a real sentence.</div>
+    </div>
+    <div class="mech-card">
+      <div class="mech-icon" style="color:var(--green)">⬡ PURE BROWSER</div>
+      <div class="mech-title">Zero Dependencies</div>
+      <div class="mech-body">No npm, no build step, no frameworks. Run it with <code style="font-family:var(--vt);color:var(--green)">python3 -m http.server</code> or just double-click.</div>
+    </div>
+  </div>
+
+  <div style="margin-top:32px">
+    <div class="section-label" style="margin-bottom:12px">// Word Types //</div>
+    <div class="word-legend">
+      <div class="wl-chip wl-noun">Noun</div>
+      <div class="wl-chip wl-verb">Verb</div>
+      <div class="wl-chip wl-ending">Ending</div>
+      <div class="wl-chip wl-and">And</div>
+    </div>
+    <p class="prose" style="margin-top:16px;font-size:20px">
+      Words are color-coded by grammatical role. Click to add them to your chirp in order. The sentence assembles live in the display bubble.
+    </p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════════════════════════════════════════════════════
+     CODE
+════════════════════════════════════════════════════ -->
+<div class="code-section">
+<div>
+  <div class="section-label">// The Code //</div>
+  <div class="section-title">How It's Built</div>
+  <p class="prose">Four files. ~1,900 lines total. The interesting logic lives in the damage formula, the word pool shuffler, and the SVG character builder.</p>
+
+  <div class="code-grid">
+
+    <!-- Damage calc -->
+    <div class="code-card">
+      <div class="code-header">
+        <div class="code-dot" style="background:#ff5f57"></div>
+        <div class="code-dot" style="background:#febc2e"></div>
+        <div class="code-dot" style="background:#28c840"></div>
+        <div class="code-filename">game.js</div>
+        <div class="code-tag" style="color:var(--red);border-color:rgba(255,34,68,0.4)">DAMAGE</div>
+      </div>
+      <pre><span class="cmt">// Takes the list of words the player picked</span>
+<span class="kw">function</span> <span class="fn">calculateDamage</span>(words) {
+
+  <span class="cmt">// Start: 5 base + 2 for every word chosen</span>
+  <span class="kw">let</span> dmg <span class="op">=</span> <span class="num">5</span> <span class="op">+</span> words.length <span class="op">*</span> <span class="num">2</span><span class="op">;</span>
+
+  <span class="cmt">// +10 if the chirp has both a noun AND a verb</span>
+  <span class="cmt">// (a complete sentence hits harder)</span>
+  <span class="kw">if</span> (words.<span class="fn">some</span>(w <span class="op">=></span> w.<span class="fn">isNoun</span>()) <span class="op">&&</span>
+      words.<span class="fn">some</span>(w <span class="op">=></span> w.<span class="fn">isVerb</span>()))
+    dmg <span class="op">+=</span> <span class="num">10</span><span class="op">;</span>
+
+  <span class="cmt">// +5 for finishing with a punchy ending</span>
+  <span class="kw">if</span> (words.<span class="fn">some</span>(w <span class="op">=></span> w.<span class="fn">isEnding</span>()))
+    dmg <span class="op">+=</span> <span class="num">5</span><span class="op">;</span>
+
+  <span class="cmt">// -10 penalty for trailing off ("...eh...")</span>
+  <span class="kw">if</span> (words.<span class="fn">some</span>(w <span class="op">=></span> w.<span class="fn">isUnfinished</span>()))
+    dmg <span class="op">-=</span> <span class="num">10</span><span class="op">;</span>
+
+  dmg <span class="op">+=</span> <span class="fn">rand</span>(<span class="num">10</span>)<span class="op">;</span>  <span class="cmt">// add 0–9 chaos so hits feel unpredictable</span>
+
+  <span class="cmt">// never below 5 or above 40 — keep it fair</span>
+  <span class="kw">return</span> <span class="fn">Math.max</span>(<span class="num">5</span>, <span class="fn">Math.min</span>(<span class="num">40</span>, dmg))<span class="op">;</span>
+}</pre>
+    </div>
+
+    <!-- Word pool -->
+    <div class="code-card">
+      <div class="code-header">
+        <div class="code-dot" style="background:#ff5f57"></div>
+        <div class="code-dot" style="background:#febc2e"></div>
+        <div class="code-dot" style="background:#28c840"></div>
+        <div class="code-filename">game.js</div>
+        <div class="code-tag" style="color:var(--cyan);border-color:rgba(0,229,255,0.4)">WORD POOL</div>
+      </div>
+      <pre><span class="cmt">// Builds the 13-word pool shown each turn</span>
+<span class="kw">function</span> <span class="fn">generateWordPool</span>() {
+
+  <span class="cmt">// Pick a random amount of nouns (3–5) and verbs (3–5)</span>
+  <span class="kw">const</span> nounCount <span class="op">=</span> <span class="num">3</span> <span class="op">+</span> <span class="fn">rand</span>(<span class="num">3</span>)<span class="op">;</span>
+  <span class="kw">const</span> verbCount <span class="op">=</span> <span class="num">3</span> <span class="op">+</span> <span class="fn">rand</span>(<span class="num">3</span>)<span class="op">;</span>
+  <span class="kw">const</span> leftover  <span class="op">=</span> <span class="num">13</span> <span class="op">-</span> nounCount <span class="op">-</span> verbCount<span class="op">;</span>
+
+  <span class="cmt">// Randomly grab nouns from the full word list</span>
+  <span class="kw">const</span> nouns <span class="op">=</span> <span class="fn">shuffle</span>(WORDS.nouns)
+    .<span class="fn">slice</span>(<span class="num">0</span>, nounCount)
+    .<span class="fn">map</span>(([s, t]) <span class="op">=></span> <span class="kw">new</span> <span class="cls">Noun</span>(s, t))<span class="op">;</span>
+
+  <span class="cmt">// Fill remaining slots: 25% chance of an ending,</span>
+  <span class="cmt">// otherwise an "and" connector</span>
+  <span class="kw">const</span> extras <span class="op">=</span> Array.<span class="fn">from</span>({length: leftover}, () <span class="op">=></span>
+    <span class="fn">rand</span>(<span class="num">4</span>) <span class="op">===</span> <span class="num">0</span>
+      <span class="op">?</span> <span class="kw">new</span> <span class="cls">Ending</span>(<span class="fn">pick</span>(WORDS.endings)[<span class="num">1</span>])
+      <span class="op">:</span> <span class="kw">new</span> <span class="cls">AndWord</span>()
+  )<span class="op">;</span>
+
+  <span class="cmt">// Mix everything together in random order</span>
+  <span class="kw">return</span> <span class="fn">shuffle</span>([...nouns, ...verbs, ...extras])<span class="op">;</span>
+}</pre>
+      <div class="code-notes" style="display:none"></div>
+    </div>
+
+    <!-- Verb conjugation -->
+    <div class="code-card">
+      <div class="code-header">
+        <div class="code-dot" style="background:#ff5f57"></div>
+        <div class="code-dot" style="background:#febc2e"></div>
+        <div class="code-dot" style="background:#28c840"></div>
+        <div class="code-filename">game.js</div>
+        <div class="code-tag" style="color:var(--purple);border-color:rgba(204,68,255,0.4)">GRAMMAR</div>
+      </div>
+      <pre><span class="cmt">// Verbs change form depending on what noun came before</span>
+<span class="kw">class</span> <span class="cls">Verb</span> <span class="kw">extends</span> <span class="cls">Word</span> {
+  <span class="fn">getText</span>(singular) {
+    <span class="kw">let</span> t <span class="op">=</span> <span class="kw">this</span>.data.text<span class="op">;</span>  <span class="cmt">// e.g. "[is/are] a total pylon"</span>
+
+    <span class="cmt">// Singular noun → use "is / was / has / skates"</span>
+    <span class="kw">if</span> (singular) {
+      <span class="kw">return</span> t
+        .<span class="fn">replace</span>(<span class="str">/\[is\/are\]/g</span>,  <span class="str">'is'</span>)
+        .<span class="fn">replace</span>(<span class="str">/\[was\/were\]/g</span>, <span class="str">'was'</span>)
+        .<span class="fn">replace</span>(<span class="str">/\[has\/have\]/g</span>, <span class="str">'has'</span>)
+        .<span class="fn">replace</span>(<span class="str">/\(s\)/g</span>,         <span class="str">'s'</span>)<span class="op">;</span>
+    }
+    <span class="cmt">// Plural noun → use "are / were / have / skate"</span>
+    <span class="kw">return</span> t
+      .<span class="fn">replace</span>(<span class="str">/\[is\/are\]/g</span>,  <span class="str">'are'</span>)
+      .<span class="fn">replace</span>(<span class="str">/\(s\)/g</span>,         <span class="str">''</span>)<span class="op">;</span>
+  }
+}</pre>
+      <div class="code-notes" style="display:none"></div>
+    </div>
+
+    <!-- SVG builder -->
+    <div class="code-card">
+      <div class="code-header">
+        <div class="code-dot" style="background:#ff5f57"></div>
+        <div class="code-dot" style="background:#febc2e"></div>
+        <div class="code-dot" style="background:#28c840"></div>
+        <div class="code-filename">characters.js</div>
+        <div class="code-tag" style="color:var(--gold);border-color:rgba(255,215,0,0.4)">SVG ART</div>
+      </div>
+      <pre><span class="cmt">// Draws a character entirely from code — no image files</span>
+<span class="kw">function</span> <span class="fn">makeCharacterSVG</span>(primary, secondary,
+                          eyeColor, number,
+                          mirrored, opts) {
+
+  <span class="cmt">// Each character can override sections (helmet, arms, etc.)</span>
+  <span class="cmt">// — or fall back to the shared default version</span>
+  <span class="kw">const</span> helmet <span class="op">=</span> opts.helmet
+    <span class="op">??</span> <span class="fn">secHelmet</span>(primary, secondary)<span class="op">;</span>
+
+  <span class="cmt">// Stack all the body sections into one SVG string</span>
+  <span class="kw">const</span> body <span class="op">=</span> <span class="str">`
+    ${SEC_BASE}                       // skates + stick
+    ${secJersey(primary, secondary)}  // colored jersey
+    ${secLeftArm(primary, secondary)} // left arm/glove
+    ${helmet}                         // helmet (custom or default)
+    ${secFace(eyeColor)}              // eyes, mouth, ears
+    ${opts.extras ?? ''}              // character-specific details`</span><span class="op">;</span>
+
+  <span class="cmt">// Flip horizontally for Player 2 so they face each other</span>
+  <span class="kw">return</span> <span class="str">`&lt;svg viewBox="0 0 200 280"&gt;
+    ${mirrored ? flip(body) : body}
+  &lt;/svg&gt;`</span><span class="op">;</span>
+}</pre>
+      <div class="code-notes" style="display:none"></div>
+    </div>
+
+  </div><!-- /code-grid -->
+</div>
+</div><!-- /code-section -->
+
+<!-- ════════════════════════════════════════════════════
+     LIVE DEMO
+════════════════════════════════════════════════════ -->
+<div class="demo-section">
+  <span class="section-label">// Live Demo //</span>
+  <span class="section-title" style="margin-top:12px;display:block">Play It Right Here</span>
+  <p class="prose" style="display:inline-block;margin-top:8px;margin-bottom:0;text-align:center;max-width:600px">
+    Player 1: <strong style="color:var(--cyan)">A / D</strong> to pick, &nbsp;
+    Player 2: <strong style="color:var(--red)">← / →</strong> to pick. &nbsp;
+    Press <strong style="color:var(--gold)">Enter</strong> to start.
+  </p>
+  <div style="margin-top:24px;display:flex;justify-content:center">
+    <div class="demo-frame-wrap" style="width:min(95vw,1200px);height:min(72vh,680px);position:relative;overflow:hidden">
+      <div id="game-root" style="width:100%;height:100%;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════════════ -->
+<footer>
+  <div class="footer-item">Pond Hockey <span class="footer-accent">Insult Simulator</span></div>
+  <div class="footer-item">Nolan Wrenn</div>
+  <div class="footer-item">Advanced Coding · <span class="footer-accent">Spring 2026</span></div>
+  <div class="footer-item">HTML · CSS · JS · <span class="footer-accent">No Dependencies</span></div>
+</footer>
+
+<!-- ── Inline character sprites in hero ── -->
+<script>
+function mkSprite(p,s,e,num,mirrored,sx){
+  const body=`
+  <ellipse cx="100" cy="277" rx="56" ry="8" fill="rgba(0,0,0,0.25)"/>
+  <path d="M 60 200 Q 56 225 56 250 L 93 250 Q 93 225 95 200 Z" fill="#1a1a30" stroke="black" stroke-width="2"/>
+  <path d="M 105 200 Q 107 225 107 250 L 144 250 Q 144 225 140 200 Z" fill="#1a1a30" stroke="black" stroke-width="2"/>
+  <line x1="22" y1="195" x2="38" y2="265" stroke="#9B7820" stroke-width="8" stroke-linecap="round"/>
+  <path d="M 34 261 Q 28 273 68 275 Q 75 266 68 260 Q 50 257 34 261 Z" fill="#111" stroke="black" stroke-width="2"/>
+  <ellipse cx="50" cy="126" rx="30" ry="22" fill="${p}" stroke="black" stroke-width="2"/>
+  <ellipse cx="150" cy="126" rx="30" ry="22" fill="${p}" stroke="black" stroke-width="2"/>
+  <path d="M 38 120 Q 32 162 56 200 L 144 200 Q 168 162 162 120 Q 136 103 100 101 Q 64 103 38 120 Z" fill="white" stroke="black" stroke-width="2"/>
+  <path d="M 38 120 Q 64 103 100 101 Q 136 103 162 120 Q 144 141 100 143 Q 56 141 38 120 Z" fill="${p}" stroke="black" stroke-width="2"/>
+  <path d="M 40 124 Q 20 148 16 186" stroke="${p}" stroke-width="26" fill="none" stroke-linecap="round"/>
+  <path d="M 160 124 Q 180 148 184 174" stroke="${p}" stroke-width="26" fill="none" stroke-linecap="round"/>
+  <rect x="88" y="107" width="24" height="18" rx="6" fill="#FFD4A3" stroke="black" stroke-width="2"/>
+  <ellipse cx="100" cy="76" rx="38" ry="42" fill="#FFD4A3" stroke="black" stroke-width="2.5"/>
+  <path d="M 62 80 Q 61 26 100 23 Q 139 26 138 80 Z" fill="${p}" stroke="black" stroke-width="2"/>
+  <ellipse cx="63" cy="77" rx="12" ry="16" fill="${s}" stroke="black" stroke-width="2"/>
+  <ellipse cx="137" cy="77" rx="12" ry="16" fill="${s}" stroke="black" stroke-width="2"/>
+  <ellipse cx="88" cy="98" rx="10" ry="9" fill="white" stroke="black" stroke-width="2"/>
+  <ellipse cx="112" cy="98" rx="10" ry="9" fill="white" stroke="black" stroke-width="2"/>
+  <circle cx="90" cy="99" r="6" fill="${e}"/>
+  <circle cx="114" cy="99" r="6" fill="${e}"/>
+  <circle cx="91" cy="99" r="3" fill="black"/>
+  <circle cx="115" cy="99" r="3" fill="black"/>
+  <path d="M 81 114 Q 100 128 119 114" fill="#7a0000" stroke="black" stroke-width="2"/>
+  <path d="M 83 112 L 117 112 L 116 119 Q 100 126 84 119 Z" fill="white" stroke="black" stroke-width="1.5"/>
+  <text x="100" y="160" text-anchor="middle" fill="${p}" font-size="22" font-weight="bold" font-family="Arial Black">${num}</text>`;
+
+  const sc=sx!==1?`<g transform="translate(100,0) scale(${sx},1) translate(-100,0)">${body}</g>`:body;
+  const inner=mirrored?`<g transform="scale(-1,1) translate(-200,0)">${sc}</g>`:sc;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280" style="overflow:visible;width:90px;height:115px">${inner}</svg>`;
+}
+
+const chars=[
+  {p:'#FF6600',s:'#CC3300',e:'#FFD700',n:'97',sx:0.78,m:false},
+  {p:'#1A237E',s:'#0D1257',e:'#B8860B',n:'2', sx:1.0, m:false},
+  {p:'#F9A825',s:'#F57F17',e:'#1565C0',n:'1', sx:1.18,m:false},
+  {p:'#8E24AA',s:'#6A0080',e:'#E040FB',n:'10',sx:0.60,m:false},
+  {p:'#2E7D32',s:'#1B5E20',e:'#A1887F',n:'69',sx:1.52,m:true},
+  {p:'#0D1117',s:'#1C2A1C',e:'#00FFCC',n:'31',sx:1.35,m:true},
+  {p:'#D32F2F',s:'#B71C1C',e:'#1976D2',n:'19',sx:0.78,m:true},
+  {p:'#455A64',s:'#263238',e:'#FF6F00',n:'0', sx:1.0, m:true},
+];
+
+const wrap=document.getElementById('hero-chars');
+chars.forEach(c=>{
+  const d=document.createElement('div');
+  d.style.cssText='display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 6px 18px rgba(255,255,255,0.06))';
+  d.innerHTML=mkSprite(c.p,c.s,c.e,c.n,c.m,c.sx);
+  wrap.appendChild(d);
+});
+</script>
+
+<script type="text/babel">
+// ── FULL INLINE GAME ─────────────────────────────────────────────────────────
+const GWORDS = {
+  nouns:[
+    [true,'your slapshot'],[true,'your wrist shot'],[true,'your five-hole'],[true,'your skating'],
+    [true,'your stick handling'],[true,'your backcheck'],[true,'your glove hand'],[true,'your chirping'],
+    [true,'your tape job'],[true,'your penalty shot'],[true,'your hockey sense'],[true,'your gear bag'],
+    [true,'the Zamboni'],[true,'the penalty box'],[true,'your mullet'],[true,'your fighting stance'],
+    [true,'that penalty'],[true,'your power play'],[false,'your teammates'],[true,'your bench'],
+    [true,'a bucket of vomit'],[true,'a cream-faced loon'],[true,'a muppet'],[true,'a hamster'],
+    [false,'you'],[true,'your mother'],[true,'your sister'],[true,'your father'],
+    [true,'your face'],[true,'your liver'],[true,"Stalin's jockstrap"],[true,'the meaning of life'],
+  ],
+  verbs:[
+    [true,'skate(s) like'],[true,'shoot(s) like'],[true,'chirp(s) worse than'],[true,'fight(s) like'],
+    [false,'belong(s) in the minors'],[false,"can't stay onside"],[false,"can't backcheck"],
+    [false,'[is/are] a total pylon'],[false,'[is/are] softer than'],[true,'[was/were] benched by'],
+    [true,'[is/are]'],[false,'[is/are] dull and ugly'],[false,'[is/are] worthless'],
+    [true,'[was/were] born in'],[true,'act(s) like'],[true,'look(s) like'],[true,'smell(s) of'],
+    [true,'dance(s) like'],[true,'farted on'],[true,'probably murdered'],
+    [true,'[has/have] worse hair than'],[true,"can't exercise because of"],
+  ],
+  endings:[
+    [false,'ya beauty!'],[false,'bud!'],[false,'ya donkey!'],[false,'champ!'],
+    [false,'get off the ice!'],[false,'sit down!'],[false,'go back to the minors!'],
+    [false,'you plug!'],[false,'you pylon!'],[false,'you duster!'],[false,"and you can't skate!"],
+    [false,'you numpty!'],[false,'you pillock!'],[false,'you cheeky bastard!'],
+    [false,'you tottering fool-born hedge-pig!'],
+  ],
+};
+
+const GCHARS = [
+  {name:'THE ROOKIE',      num:'97', primary:'#FF6600', secondary:'#CC3300', eye:'#FFD700', sx:0.78},
+  {name:'THE VETERAN',     num:'2',  primary:'#1A237E', secondary:'#0D1257', eye:'#B8860B', sx:1.0},
+  {name:"THE COACH'S SON", num:'1',  primary:'#F9A825', secondary:'#F57F17', eye:'#1565C0', sx:1.18},
+  {name:'THE FIGURE SKATER',num:'10',primary:'#8E24AA', secondary:'#6A0080', eye:'#E040FB', sx:0.60},
+  {name:'THE BEER LEAGUER',num:'69', primary:'#2E7D32', secondary:'#1B5E20', eye:'#A1887F', sx:1.52},
+  {name:'THE GOALIE',      num:'31', primary:'#0D1117', secondary:'#1C2A1C', eye:'#00FFCC', sx:1.35},
+  {name:'THE EUR. IMPORT', num:'19', primary:'#D32F2F', secondary:'#B71C1C', eye:'#1976D2', sx:0.78},
+  {name:'THE REF',         num:'0',  primary:'#455A64', secondary:'#263238', eye:'#FF6F00', sx:1.0},
+];
+
+function gCharSVG(p,s,e,num,mirrored,scaleX){
+  const body=`
+  <ellipse cx="100" cy="277" rx="56" ry="8" fill="rgba(0,0,0,0.25)"/>
+  <path d="M 60 200 Q 56 225 56 250 L 93 250 Q 93 225 95 200 Z" fill="#1a1a30" stroke="black" stroke-width="2"/>
+  <path d="M 105 200 Q 107 225 107 250 L 144 250 Q 144 225 140 200 Z" fill="#1a1a30" stroke="black" stroke-width="2"/>
+  <line x1="22" y1="195" x2="38" y2="265" stroke="#9B7820" stroke-width="9" stroke-linecap="round"/>
+  <path d="M 34 261 Q 28 273 68 275 Q 75 266 68 260 Q 50 257 34 261 Z" fill="#111" stroke="black" stroke-width="2"/>
+  <ellipse cx="50" cy="126" rx="30" ry="22" fill="${p}" stroke="black" stroke-width="2"/>
+  <ellipse cx="150" cy="126" rx="30" ry="22" fill="${p}" stroke="black" stroke-width="2"/>
+  <path d="M 38 120 Q 32 162 56 200 L 144 200 Q 168 162 162 120 Q 136 103 100 101 Q 64 103 38 120 Z" fill="white" stroke="black" stroke-width="2.5"/>
+  <path d="M 38 120 Q 64 103 100 101 Q 136 103 162 120 Q 144 141 100 143 Q 56 141 38 120 Z" fill="${p}" stroke="black" stroke-width="2"/>
+  <path d="M 40 165 Q 100 161 160 165 L 158 174 Q 100 170 42 174 Z" fill="${p}" stroke="black" stroke-width="1.5"/>
+  <path d="M 40 124 Q 20 148 16 186" stroke="${p}" stroke-width="28" fill="none" stroke-linecap="round"/>
+  <ellipse cx="17" cy="197" rx="26" ry="23" fill="${p}" stroke="black" stroke-width="2.5"/>
+  <path d="M -6 183 Q -6 172 5 170 L 28 170 Q 40 172 40 183 L 40 193 Q 40 198 28 199 L 5 199 Q -6 198 -6 193 Z" fill="${s}" stroke="black" stroke-width="2"/>
+  <path d="M 160 124 Q 180 148 184 174" stroke="${p}" stroke-width="28" fill="none" stroke-linecap="round"/>
+  <ellipse cx="183" cy="185" rx="26" ry="23" fill="${p}" stroke="black" stroke-width="2.5"/>
+  <path d="M 160 171 Q 160 160 171 158 L 194 158 Q 206 160 206 171 L 206 181 Q 206 186 194 187 L 171 187 Q 160 186 160 181 Z" fill="${s}" stroke="black" stroke-width="2"/>
+  <rect x="88" y="107" width="24" height="18" rx="6" fill="#FFD4A3" stroke="black" stroke-width="2"/>
+  <ellipse cx="100" cy="76" rx="38" ry="42" fill="#FFD4A3" stroke="black" stroke-width="2.5"/>
+  <ellipse cx="62" cy="78" rx="10" ry="13" fill="#FFD4A3" stroke="black" stroke-width="2"/>
+  <ellipse cx="138" cy="78" rx="10" ry="13" fill="#FFD4A3" stroke="black" stroke-width="2"/>
+  <path d="M 62 80 Q 61 26 100 23 Q 139 26 138 80 Z" fill="${p}" stroke="black" stroke-width="2.5"/>
+  <ellipse cx="63" cy="77" rx="12" ry="16" fill="${s}" stroke="black" stroke-width="2"/>
+  <ellipse cx="137" cy="77" rx="12" ry="16" fill="${s}" stroke="black" stroke-width="2"/>
+  <path d="M 62 80 Q 100 86 138 80 L 134 91 Q 100 97 66 91 Z" fill="rgba(140,200,255,0.35)" stroke="black" stroke-width="2"/>
+  <ellipse cx="88" cy="98" rx="10" ry="9" fill="white" stroke="black" stroke-width="2"/>
+  <ellipse cx="112" cy="98" rx="10" ry="9" fill="white" stroke="black" stroke-width="2"/>
+  <circle cx="90" cy="99" r="6" fill="${e}"/>
+  <circle cx="114" cy="99" r="6" fill="${e}"/>
+  <circle cx="91" cy="99" r="3" fill="black"/>
+  <circle cx="115" cy="99" r="3" fill="black"/>
+  <path d="M 81 114 Q 100 128 119 114" fill="#7a0000" stroke="black" stroke-width="2"/>
+  <path d="M 83 112 L 117 112 L 116 119 Q 100 126 84 119 Z" fill="white" stroke="black" stroke-width="1.5"/>
+  <text x="100" y="160" text-anchor="middle" fill="${p}" font-size="22" font-weight="bold" font-family="Arial Black">${num}</text>`;
+  const sc=scaleX!==1?`<g transform="translate(100,0) scale(${scaleX},1) translate(-100,0)">${body}</g>`:body;
+  const inner=mirrored?`<g transform="scale(-1,1) translate(-200,0)">${sc}</g>`:sc;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280" style="overflow:visible;width:100%;height:100%">${inner}</svg>`;
+}
+
+// Word logic
+const grand=n=>Math.floor(Math.random()*n);
+const gpick=arr=>arr[grand(arr.length)];
+function gshuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=grand(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;}
+function gPool(){
+  const nc=3+grand(3),vc=3+grand(3),left=13-nc-vc;
+  const nouns=gshuffle(GWORDS.nouns).slice(0,nc).map(([s,t])=>({type:'noun',singular:s,text:t}));
+  const verbs=gshuffle(GWORDS.verbs).slice(0,vc).map(([n,t])=>({type:'verb',needsNoun:n,text:t}));
+  const extras=Array.from({length:left},()=>grand(4)===0?{type:'ending',text:gpick(GWORDS.endings)[1]}:{type:'and'});
+  return gshuffle([...nouns,...verbs,...extras]);
+}
+function gVbTxt(w,sg){
+  let t=w.text;
+  if(sg)return t.replace(/\[is\/are\]/g,'is').replace(/\[was\/were\]/g,'was').replace(/\[has\/have\]/g,'has').replace(/\(s\)/g,'s');
+  return t.replace(/\[is\/are\]/g,'are').replace(/\[was\/were\]/g,'were').replace(/\[has\/have\]/g,'have').replace(/\(s\)/g,'');
+}
+function gFmt(sel){
+  let r='',sg=false;
+  sel.forEach((w,i)=>{
+    if(w.type==='ending')r+=',';
+    if(i>0)r+=' ';
+    if(w.type==='noun'){sg=w.singular;r+=w.text;}
+    else if(w.type==='verb')r+=gVbTxt(w,sg);
+    else if(w.type==='ending')r+=w.text;
+    else r+='and';
+  });
+  const last=sel[sel.length-1];
+  if(last&&last.type!=='ending')r+='!';
+  return r;
+}
+function gDmg(sel){
+  let d=5+sel.length*2;
+  if(sel.some(w=>w.type==='noun')&&sel.some(w=>w.type==='verb'))d+=10;
+  if(sel.some(w=>w.type==='ending'))d+=5;
+  d+=grand(10);
+  return Math.max(5,Math.min(40,d));
+}
+
+// Buttons
+function GBtn({children,onClick,sec}){
+  const[pr,setPr]=React.useState(false);
+  const[hv,setHv]=React.useState(false);
+  const st=sec?{
+    background:'#0c1220',color:'#7799bb',
+    borderTop:`3px solid ${pr?'#111e33':'#4466aa'}`,borderLeft:`3px solid ${pr?'#111e33':'#4466aa'}`,
+    borderRight:`3px solid ${pr?'#4466aa':'#111e33'}`,borderBottom:`3px solid ${pr?'#4466aa':'#111e33'}`,
+  }:{
+    background:'#0d2e1a',color:'#5ecf8a',
+    borderTop:`3px solid ${pr?'#071a0e':'#3a8f5c'}`,borderLeft:`3px solid ${pr?'#071a0e':'#3a8f5c'}`,
+    borderRight:`3px solid ${pr?'#3a8f5c':'#071a0e'}`,borderBottom:`3px solid ${pr?'#3a8f5c':'#071a0e'}`,
+  };
+  return(
+    <button onClick={onClick}
+      onMouseEnter={()=>setHv(true)}onMouseLeave={()=>setHv(false)}
+      onMouseDown={()=>setPr(true)}onMouseUp={()=>setPr(false)}
+      style={{fontFamily:"'Press Start 2P',monospace",fontSize:9,padding:'10px 20px',
+        letterSpacing:2,textTransform:'uppercase',cursor:'pointer',borderRadius:0,
+        filter:hv&&!pr?'brightness(1.12)':'none',transform:pr?'translate(2px,2px)':'none',
+        transition:'filter 0.08s,transform 0.08s',...st}}>
+      {children}
+    </button>
+  );
+}
+
+function GWordBtn({word,onClick}){
+  const[pr,setPr]=React.useState(false);
+  const[hv,setHv]=React.useState(false);
+  const label=word.type==='noun'?word.text:word.type==='verb'?gVbTxt(word,false):word.type==='ending'?word.text:'and';
+  const t={
+    noun:{bg:'#00101e',cl:'#66ccff',hi:'#0088cc',lo:'#003a55'},
+    verb:{bg:'#1a0008',cl:'#ff8899',hi:'#cc1a33',lo:'#550011'},
+    ending:{bg:'#140e00',cl:'#ffdd66',hi:'#bb8800',lo:'#553d00'},
+    and:{bg:'#120020',cl:'#dd88ff',hi:'#8822bb',lo:'#3d0055'},
+  }[word.type]||{bg:'#120020',cl:'#dd88ff',hi:'#8822bb',lo:'#3d0055'};
+  return(
+    <button onClick={onClick}
+      onMouseEnter={()=>setHv(true)}onMouseLeave={()=>setHv(false)}
+      onMouseDown={()=>setPr(true)}onMouseUp={()=>setPr(false)}
+      style={{fontFamily:"'VT323',monospace",fontSize:20,lineHeight:1,
+        background:t.bg,padding:'5px 13px',color:t.cl,cursor:'pointer',
+        borderRadius:0,textTransform:'uppercase',letterSpacing:1,
+        borderTop:`3px solid ${pr?t.lo:t.hi}`,borderLeft:`3px solid ${pr?t.lo:t.hi}`,
+        borderRight:`3px solid ${pr?t.hi:t.lo}`,borderBottom:`3px solid ${pr?t.hi:t.lo}`,
+        filter:hv&&!pr?'brightness(1.3)':'none',
+        transform:hv&&!pr?'translateY(-2px)':pr?'translate(2px,2px)':'none',
+        transition:'filter 0.08s,transform 0.08s'}}>
+      {label}
+    </button>
+  );
+}
+
+function GHPBar({hp,p2}){
+  const seg='repeating-linear-gradient(90deg,transparent,transparent 9px,rgba(0,0,0,0.35) 9px,rgba(0,0,0,0.35) 10px)';
+  let bg;
+  if(hp>60)bg=p2?`${seg},linear-gradient(90deg,#ff6680,#ff2244)`:`${seg},linear-gradient(90deg,#66eeff,#00bbdd)`;
+  else if(hp>30)bg=`${seg},linear-gradient(90deg,#ffdd44,#ffaa00)`;
+  else bg=`${seg},linear-gradient(90deg,#ff8888,#ff2244)`;
+  return(
+    <div style={{background:'#080a14',padding:3,border:'2px solid #1c2840',boxShadow:'inset 0 0 10px rgba(0,0,0,0.8)'}}>
+      <div style={{height:18,width:hp+'%',backgroundImage:bg,transition:'width 0.4s ease'}}/>
+    </div>
+  );
+}
+
+function GArrow({children,onClick}){
+  const[pr,setPr]=React.useState(false);
+  const[hv,setHv]=React.useState(false);
+  return(
+    <button onClick={onClick}
+      onMouseEnter={()=>setHv(true)}onMouseLeave={()=>setHv(false)}
+      onMouseDown={()=>setPr(true)}onMouseUp={()=>setPr(false)}
+      style={{background:'#0a0d1c',color:hv?'#ffd700':'#c8dcf0',fontSize:16,
+        width:40,height:40,borderRadius:0,cursor:'pointer',display:'flex',
+        alignItems:'center',justifyContent:'center',flexShrink:0,
+        borderTop:`3px solid ${pr?'#0d1020':'#2a3a54'}`,borderLeft:`3px solid ${pr?'#0d1020':'#2a3a54'}`,
+        borderRight:`3px solid ${pr?'#2a3a54':'#0d1020'}`,borderBottom:`3px solid ${pr?'#2a3a54':'#0d1020'}`,
+        transform:pr?'translate(2px,2px)':'none',filter:hv?'brightness(1.3)':'none',
+        transition:'filter 0.1s,transform 0.1s'}}>
+      {children}
+    </button>
+  );
+}
+
+function GCharSelect({onStart}){
+  const[p1,setP1]=React.useState(0);
+  const[p2,setP2]=React.useState(1);
+  const[k1,setK1]=React.useState(0);
+  const[k2,setK2]=React.useState(0);
+  const n=GCHARS.length;
+  const cyc1d=()=>{setP1(i=>(i-1+n)%n);setK1(k=>k+1);};
+  const cyc1u=()=>{setP1(i=>(i+1)%n);setK1(k=>k+1);};
+  const cyc2d=()=>{setP2(i=>(i-1+n)%n);setK2(k=>k+1);};
+  const cyc2u=()=>{setP2(i=>(i+1)%n);setK2(k=>k+1);};
+
+  React.useEffect(()=>{
+    const h=e=>{
+      if(e.key==='a'||e.key==='A')cyc1d();
+      if(e.key==='d'||e.key==='D')cyc1u();
+      if(e.key==='ArrowLeft'){e.preventDefault();cyc2d();}
+      if(e.key==='ArrowRight'){e.preventDefault();cyc2u();}
+      if(e.key==='Enter'||e.key===' '){e.preventDefault();onStart(p1,p2);}
+    };
+    window.addEventListener('keydown',h);
+    return()=>window.removeEventListener('keydown',h);
+  },[p1,p2]);
+
+  const c1=GCHARS[p1],c2=GCHARS[p2];
+  const picker=(c,idx,kv,onPrev,onNext,pNum)=>(
+    <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,
+      background:'#070c1a',border:`3px solid ${pNum===1?'rgba(0,229,255,0.5)':'rgba(255,34,68,0.5)'}`,
+      padding:'14px 16px 10px',flex:1,
+      boxShadow:`0 0 20px ${pNum===1?'rgba(0,229,255,0.05)':'rgba(255,34,68,0.05)'},inset 0 0 20px rgba(0,0,0,0.4)`}}>
+      <div style={{fontFamily:"'Press Start 2P',monospace",fontSize:8,
+        color:pNum===1?'#00e5ff':'#ff2244',letterSpacing:3}}>PLAYER {pNum}</div>
+      <div style={{fontSize:'6px',fontFamily:"'Press Start 2P',monospace",
+        color:'rgba(200,220,255,0.25)',letterSpacing:2}}>
+        {pNum===1?'Keys: A / D':'Keys: ◄ / ►'}
+      </div>
+      <div style={{display:'flex',alignItems:'center',gap:10}}>
+        <GArrow onClick={onPrev}>&#9664;</GArrow>
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:5,minWidth:150}}>
+          <style>{`@keyframes gcspi{from{opacity:0;transform:scale(0.8)}to{opacity:1;transform:none}}.gcs${pNum}-${kv}{animation:gcspi 0.15s ease}`}</style>
+          <div className={`gcs${pNum}-${kv}`}
+            style={{width:130,height:165,display:'flex',alignItems:'flex-end',justifyContent:'center',
+              filter:'drop-shadow(0 6px 16px rgba(255,255,255,0.07))'}}
+            dangerouslySetInnerHTML={{__html:gCharSVG(c.primary,c.secondary,c.eye,c.num,pNum===2,c.sx)}}/>
+          <div style={{fontFamily:"'Press Start 2P',monospace",fontSize:7,color:'#fff',
+            textAlign:'center',textTransform:'uppercase',letterSpacing:1,textShadow:'1px 1px 0 rgba(0,0,0,0.9)'}}>{c.name}</div>
+        </div>
+        <GArrow onClick={onNext}>&#9654;</GArrow>
+      </div>
+      <div style={{display:'flex',gap:6}}>
+        {GCHARS.map((_,i)=>(
+          <div key={i} style={{width:6,height:6,
+            background:i===idx?'#ffd700':'rgba(255,255,255,0.1)',
+            border:`2px solid ${i===idx?'#ffd700':'rgba(255,255,255,0.18)'}`}}/>
+        ))}
+      </div>
+    </div>
+  );
+
+  return(
+    <div style={{width:'100%',height:'100%',display:'flex',flexDirection:'column',
+      alignItems:'center',justifyContent:'center',gap:20,
+      background:'#04060d',
+      backgroundImage:'repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,229,255,0.008) 3px,rgba(0,229,255,0.008) 4px)',
+      fontFamily:"'Press Start 2P',monospace",padding:16}}>
+      <div style={{fontSize:16,color:'#ffd700',textTransform:'uppercase',letterSpacing:4,
+        textShadow:'0 0 16px rgba(255,215,0,0.7),3px 3px 0 rgba(0,0,0,0.95)',textAlign:'center',lineHeight:1.5}}>
+        CHOOSE YOUR FIGHTERS
+      </div>
+      <div style={{display:'flex',alignItems:'center',gap:20,width:'100%',maxWidth:800}}>
+        {picker(c1,p1,k1,cyc1d,cyc1u,1)}
+        <div style={{fontSize:24,color:'#ffd700',letterSpacing:4,flexShrink:0,userSelect:'none',
+          textShadow:'0 0 16px rgba(255,215,0,0.8),3px 3px 0 rgba(0,0,0,0.95)'}}>VS</div>
+        {picker(c2,p2,k2,cyc2d,cyc2u,2)}
+      </div>
+      <GBtn onClick={()=>onStart(p1,p2)}>START GAME</GBtn>
+    </div>
+  );
+}
+
+function GGameOver({winner,onRematch,onMenu}){
+  return(
+    <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.88)',
+      display:'flex',alignItems:'center',justifyContent:'center',zIndex:50}}>
+      <style>{`@keyframes ggoIn{from{transform:scale(0.8);opacity:0}to{transform:scale(1);opacity:1}}
+               @keyframes gkoFl{0%,40%,60%,100%{opacity:1}50%{opacity:0.15}55%{opacity:1}57%{opacity:0.15}}
+               .ggo-box{animation:ggoIn 0.4s ease both}.gko{animation:gkoFl 1s ease 0.1s both}`}</style>
+      <div className="ggo-box" style={{background:'#03050d',border:'4px solid #ffd700',
+        padding:'36px 48px',textAlign:'center',display:'flex',flexDirection:'column',
+        alignItems:'center',gap:16,
+        boxShadow:'0 0 50px rgba(255,215,0,0.2),inset 0 0 30px rgba(0,0,0,0.6)'}}>
+        <div className="gko" style={{fontFamily:"'Press Start 2P',monospace",fontSize:36,color:'#ff2244',
+          textShadow:'0 0 16px rgba(255,34,68,0.9),3px 3px 0 #330011',letterSpacing:4}}>K.O.!</div>
+        <div style={{fontFamily:"'Press Start 2P',monospace",fontSize:11,color:'#ffd700',
+          letterSpacing:3,textShadow:'0 0 12px rgba(255,215,0,0.8)',lineHeight:1.6}}>{winner}</div>
+        <div style={{fontFamily:"'Press Start 2P',monospace",fontSize:7,color:'#00e5ff',
+          letterSpacing:5,textShadow:'0 0 8px rgba(0,229,255,0.6)'}}>WINS THE CHIRP-OFF</div>
+        <div style={{display:'flex',gap:14,marginTop:8}}>
+          <GBtn onClick={onRematch}>REMATCH</GBtn>
+          <GBtn sec onClick={onMenu}>MENU</GBtn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GScreen({p1i,p2i,onMenu}){
+  const c1=GCHARS[p1i],c2=GCHARS[p2i];
+  const init=()=>({cur:1,round:1,hp:{1:100,2:100},pool:gPool(),sel:[],
+    a1:'',a2:'',dmgTxt:'',showDmg:false,lastInsult:''});
+  const[gs,setGs]=React.useReducer((s,a)=>({...s,...a}),null,init);
+  const[over,setOver]=React.useState(null);
+
+  const selWord=idx=>{
+    setGs(s=>{
+      const pool=[...s.pool];
+      const[w]=pool.splice(idx,1);
+      return{pool,sel:[...s.sel,w]};
+    });
+  };
+
+  const fire=()=>{
+    setGs(s=>{
+      if(!s.sel.length)return s;
+      const att=s.cur,def=att===1?2:1;
+      const dmg=gDmg(s.sel);
+      const text=gFmt(s.sel);
+      const newHp=Math.max(0,s.hp[def]-dmg);
+      setTimeout(()=>{
+        setGs({a1:'',a2:'',showDmg:false});
+        if(newHp<=0)setTimeout(()=>setOver(att===1?c1.name:c2.name),400);
+        else setTimeout(()=>setGs(s2=>({
+          cur:s2.cur===1?2:1,round:s2.cur===2?s2.round+1:s2.round,
+          pool:gPool(),sel:[],lastInsult:'',
+        })),2500);
+      },550);
+      return{hp:{...s.hp,[def]:newHp},
+        a1:att===1?'ga1Atk':'ga1Hrt',a2:att===2?'ga2Atk':'ga2Hrt',
+        dmgTxt:`-${dmg} HP`,showDmg:true,lastInsult:text,sel:s.sel};
+    });
+  };
+
+  const insult=()=>{
+    if(gs.sel.length>0){let sg=false;return gs.sel.map(w=>{if(w.type==='noun'){sg=w.singular;return w.text;}return w.type==='verb'?gVbTxt(w,sg):w.type==='ending'?w.text:'and';}).join(' ')+'...';}
+    if(gs.lastInsult&&!gs.sel.length)return gs.lastInsult;
+    return 'Select words to build your chirp!';
+  };
+
+  return(
+    <div style={{width:'100%',height:'100%',background:'#080c1a',border:'4px solid #00e5ff',
+      boxShadow:'0 0 0 2px #05070f,0 0 40px rgba(0,229,255,0.1),inset 0 0 40px rgba(0,0,0,0.5)',
+      display:'flex',flexDirection:'column',position:'relative',overflow:'hidden'}}>
+      {over&&<GGameOver winner={over} onRematch={()=>{setGs(init());setOver(null);}} onMenu={onMenu}/>}
+      <style>{`
+        @keyframes gdmgpop{0%{transform:scale(0) rotate(-10deg);opacity:0}45%{transform:scale(1.4) rotate(3deg);opacity:1}100%{transform:scale(1);opacity:1}}
+        @keyframes gbubble{0%,100%{box-shadow:0 0 12px rgba(255,215,0,0.15),inset 0 0 16px rgba(0,0,0,0.5)}50%{box-shadow:0 0 22px rgba(255,215,0,0.28),inset 0 0 16px rgba(0,0,0,0.5)}}
+        @keyframes ga1Atk{0%{transform:translateX(14px) rotate(5deg)}40%{transform:translateX(40px) rotate(12deg) scale(1.07)}100%{transform:translateX(14px) rotate(5deg)}}
+        @keyframes ga2Atk{0%{transform:translateX(-14px) rotate(-5deg)}40%{transform:translateX(-40px) rotate(-12deg) scale(1.07)}100%{transform:translateX(-14px) rotate(-5deg)}}
+        @keyframes ga1Hrt{0%,100%{transform:translateX(14px) rotate(5deg)}30%{transform:translateX(-6px) rotate(0)}65%{transform:translateX(22px) rotate(7deg)}}
+        @keyframes ga2Hrt{0%,100%{transform:translateX(-14px) rotate(-5deg)}30%{transform:translateX(6px) rotate(0)}65%{transform:translateX(-22px) rotate(-7deg)}}
+        .ga1Atk{animation:ga1Atk 0.5s ease!important}.ga2Atk{animation:ga2Atk 0.5s ease!important}
+        .ga1Hrt{animation:ga1Hrt 0.45s ease!important}.ga2Hrt{animation:ga2Hrt 0.45s ease!important}
+      `}</style>
+      {/* Top neon trim */}
+      <div style={{position:'absolute',top:0,left:0,right:0,height:3,
+        background:'linear-gradient(90deg,transparent,#00e5ff,#ffd700,#00e5ff,transparent)',zIndex:20}}/>
+      {/* HP bars */}
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',
+        padding:'8px 18px',background:'#03050c',borderBottom:'3px solid #1c2840',zIndex:10}}>
+        <div style={{display:'flex',flexDirection:'column',gap:4,minWidth:220}}>
+          <div style={{fontFamily:"'Press Start 2P',monospace",fontSize:6,color:'#00e5ff',letterSpacing:2}}>{c1.name}</div>
+          <GHPBar hp={gs.hp[1]} p2={false}/>
+        </div>
+        <div style={{fontFamily:"'Press Start 2P',monospace",fontSize:9,color:'#ffd700',
+          padding:'6px 14px',border:'2px solid #ffd700',letterSpacing:2,whiteSpace:'nowrap',
+          textShadow:'0 0 8px rgba(255,215,0,0.8)'}}>
+          RND {gs.round}
+        </div>
+        <div style={{display:'flex',flexDirection:'column',gap:4,minWidth:220,alignItems:'flex-end'}}>
+          <div style={{fontFamily:"'Press Start 2P',monospace",fontSize:6,color:'#ff2244',letterSpacing:2}}>{c2.name}</div>
+          <GHPBar hp={gs.hp[2]} p2={true}/>
+        </div>
+      </div>
+      {/* Arena */}
+      <div style={{flex:1,display:'flex',overflow:'hidden'}}>
+        {/* P1 */}
+        <div style={{width:'26%',display:'flex',alignItems:'flex-end',justifyContent:'center',
+          padding:'10px 10px 10px 14px',
+          background:'repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(255,255,255,0.005) 40px,rgba(255,255,255,0.005) 41px),linear-gradient(180deg,#040810,#060c1a)'}}>
+          <div className={gs.a1}
+            style={{height:'90%',aspectRatio:'0.77',
+              filter:'drop-shadow(0 8px 20px rgba(0,229,255,0.18))',
+              transform:'translateX(14px) rotate(5deg)',transformOrigin:'bottom center'}}
+            dangerouslySetInnerHTML={{__html:gCharSVG(c1.primary,c1.secondary,c1.eye,c1.num,false,c1.sx)}}/>
+        </div>
+        {/* Center */}
+        <div style={{flex:1,display:'flex',flexDirection:'column',justifyContent:'center',
+          alignItems:'center',gap:10,
+          background:'repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(255,255,255,0.005) 40px,rgba(255,255,255,0.005) 41px),linear-gradient(180deg,#040810,#060c1a)'}}>
+          <div style={{background:'#03050d',border:'3px solid #ffd700',padding:'16px 20px 12px',
+            minHeight:90,width:'90%',position:'relative',animation:'gbubble 3s ease-in-out infinite'}}>
+            <div style={{position:'absolute',top:-11,left:14,fontFamily:"'Press Start 2P',monospace",
+              fontSize:6,color:'#ffd700',background:'#03050d',padding:'2px 7px',
+              textShadow:'0 0 6px rgba(255,215,0,0.8)',letterSpacing:3}}>// CHIRP //</div>
+            <div style={{fontFamily:"'VT323',monospace",fontSize:26,color:'#fff',
+              textAlign:'center',textTransform:'uppercase',letterSpacing:1,lineHeight:1.3,
+              textShadow:'0 0 12px rgba(255,255,255,0.2)'}}>
+              {insult()}
+            </div>
+          </div>
+          <div style={{minHeight:40,display:'flex',alignItems:'center',justifyContent:'center'}}>
+            {gs.showDmg&&(
+              <div style={{fontFamily:"'Press Start 2P',monospace",fontSize:24,color:'#ff2244',
+                textShadow:'0 0 8px rgba(255,34,68,0.9),2px 2px 0 #330011',
+                animation:'gdmgpop 1s ease both'}}>
+                {gs.dmgTxt}
+              </div>
+            )}
+          </div>
+        </div>
+        {/* P2 */}
+        <div style={{width:'26%',display:'flex',alignItems:'flex-end',justifyContent:'center',
+          padding:'10px 14px 10px 10px',
+          background:'repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(255,255,255,0.005) 40px,rgba(255,255,255,0.005) 41px),linear-gradient(180deg,#040810,#060c1a)'}}>
+          <div className={gs.a2}
+            style={{height:'90%',aspectRatio:'0.77',
+              filter:'drop-shadow(0 8px 20px rgba(255,34,68,0.18))',
+              transform:'translateX(-14px) rotate(-5deg)',transformOrigin:'bottom center'}}
+            dangerouslySetInnerHTML={{__html:gCharSVG(c2.primary,c2.secondary,c2.eye,c2.num,true,c2.sx)}}/>
+        </div>
+      </div>
+      {/* Words */}
+      <div style={{background:'#04060f',padding:'8px 14px 11px',borderTop:'3px solid #1c2840',zIndex:10}}>
+        <div style={{fontFamily:"'Press Start 2P',monospace",fontSize:6,color:'rgba(0,229,255,0.4)',
+          letterSpacing:3,textAlign:'center',marginBottom:7}}>◄ CHOOSE YOUR WORDS ►</div>
+        <div style={{display:'flex',flexWrap:'wrap',gap:6,justifyContent:'center',
+          minHeight:78,alignContent:'flex-start'}}>
+          {gs.pool.map((w,i)=><GWordBtn key={i} word={w} onClick={()=>selWord(i)}/>)}
+        </div>
+        <div style={{display:'flex',gap:12,justifyContent:'center',marginTop:8}}>
+          <GBtn onClick={fire}>CHIRP!</GBtn>
+          <GBtn sec onClick={()=>setGs(s=>({pool:gPool(),sel:[],lastInsult:''}))}>RESET</GBtn>
+        </div>
+      </div>
+      {/* Turn */}
+      <div style={{background:'#03050c',padding:7,textAlign:'center',
+        fontFamily:"'Press Start 2P',monospace",fontSize:6,color:'#c8dcf0',
+        borderTop:'3px solid #1c2840',letterSpacing:3,textTransform:'uppercase'}}>
+        <span style={{color:'#ffd700',textShadow:'0 0 8px rgba(255,215,0,0.8)'}}>{gs.cur===1?c1.name:c2.name}</span>'S TURN
+      </div>
+    </div>
+  );
+}
+
+function InlineGame(){
+  const[screen,setScreen]=React.useState('select');
+  const[chars,setChars]=React.useState({p1:0,p2:1});
+  const start=(p1,p2)=>{setChars({p1,p2});setScreen('game');};
+  const menu=()=>setScreen('select');
+  if(screen==='game')return<GScreen p1i={chars.p1} p2i={chars.p2} onMenu={menu}/>;
+  return<GCharSelect onStart={start}/>;
+}
+
+const gameRoot=document.getElementById('game-root');
+if(gameRoot){
+  ReactDOM.createRoot(gameRoot).render(<InlineGame/>);
+}
+</script>
+</body>
+</html>
